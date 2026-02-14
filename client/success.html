@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Policy Signed Successfully</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #38ef7d, #11998e);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      text-align: center;
+      width: 380px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .checkmark {
+      font-size: 60px;
+      color: #38a169;
+      margin-bottom: 15px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    p {
+      color: #555;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #11998e;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #0f7f73;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="checkmark">✔</div>
+
+  <h2>Policy Signed Successfully!</h2>
+
+  <p>
+    Thank you for accepting the company policy.  
+    Your confirmation has been recorded successfully.
+  </p>
+
+  <button onclick="goToLogin()">Back to Login</button>
+  <button onclick="logout()">Logout</button>
+
+</div>
+
+<script>
+function goToLogin() {
+  window.location.href = "index.html";
+}
+
+function logout() {
+  localStorage.removeItem("employeeToken");
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

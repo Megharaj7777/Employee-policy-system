@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Employee Policy System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      width: 350px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #667eea;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #667eea;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #5a67d8;
+    }
+
+    .toggle-btn {
+      background: transparent;
+      color: #667eea;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #adminError {
+      color: red;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+<h2>Employee Policy System</h2>
+
+<div id="employeeSection">
+
+  <input type="text" id="phone" placeholder="Enter Mobile Number">
+  <button onclick="sendOTP()">Send OTP</button>
+
+  <input type="text" id="otp" placeholder="Enter OTP">
+  <button onclick="verifyOTP()">Verify OTP</button>
+
+  <button class="toggle-btn" onclick="showAdmin()">
+    Login as Admin
+  </button>
+
+</div>
+
+<div id="adminSection" class="hidden">
+
+  <input type="text" id="adminUsername" placeholder="Admin Username">
+  <input type="password" id="adminPassword" placeholder="Admin Password">
+  <button onclick="adminLogin()">Login</button>
+
+  <p id="adminError"></p>
+
+  <button class="toggle-btn" onclick="showEmployee()">
+    Back to Employee Login
+  </button>
+
+</div>
+
+</div>
+
+<script>
+let savedPhone = "";
+
+function showAdmin() {
+  document.getElementById("adminSection").classList.remove("hidden");
+  document.getElementById("employeeSection").classList.add("hidden");
+}
+
+function showEmployee() {
+  document.getElementById("employeeSection").classList.remove("hidden");
+  document.getElementById("adminSection").classList.add("hidden");
+}
+
+function sendOTP() {
+  const phone = document.getElementById("phone").value;
+  savedPhone = phone;
+
+  fetch("http://localhost:5000/api/employee/send-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone })
+  })
+  .then(res => res.json())
+  .then(data => alert(data.message));
+}
+
+function verifyOTP() {
+  const otp = document.getElementById("otp").value;
+
+  fetch("http://localhost:5000/api/employee/verify-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone: savedPhone, otp })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.token) {
+      localStorage.setItem("employeeToken", data.token);
+      window.location.href = "policy.html";
+    } else {
+      alert(data.message);
+    }
+  });
+}
+
+function adminLogin() {
+  const username = document.getElementById("adminUsername").value;
+  const password = document.getElementById("adminPassword").value;
+
+  fetch("http://localhost:5000/api/admin/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.token) {
+      localStorage.setItem("adminToken", data.token);
+      window.location.href = "admin-dashboard.html";
+    } else {
+      document.getElementById("adminError").innerText = data.message;
+    }
+  });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Employee Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 400px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background: #5a67d8;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Company Policy</h2>
+
+  <p>
+    Please read and accept the company policy carefully.
+  </p>
+
+  <button onclick="signPolicy()">Accept Policy</button>
+</div>
+
+<script>
+const token = localStorage.getItem("employeeToken");
+if (!token) window.location.href = "index.html";
+
+function signPolicy() {
+  fetch("http://localhost:5000/api/employee/sign-policy", {
+    method: "POST",
+    headers: { Authorization: token }
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+    window.location.href = "success.html";
+  });
+}
+</script>
+
+</body>
+</html>

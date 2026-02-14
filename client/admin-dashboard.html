@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+    }
+
+    .navbar {
+      background: #667eea;
+      padding: 15px;
+      color: white;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #5a67d8;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #667eea;
+      color: white;
+    }
+
+    .logout {
+      background: red;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  Admin Dashboard
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h3>Create Employee</h3>
+    <input type="text" id="phone" placeholder="Enter Phone">
+    <button onclick="createEmployee()">Create</button>
+  </div>
+
+  <div class="card">
+    <h3>Employee List</h3>
+    <table id="employeeTable">
+      <thead>
+        <tr>
+          <th>Phone</th>
+          <th>Signed Policy</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
+</div>
+
+<script>
+const token = localStorage.getItem("adminToken");
+if (!token) window.location.href = "index.html";
+
+function fetchEmployees() {
+  fetch("http://localhost:5000/api/admin/employees", {
+    headers: { Authorization: token }
+  })
+  .then(res => res.json())
+  .then(data => {
+    const tbody = document.querySelector("#employeeTable tbody");
+    tbody.innerHTML = "";
+
+    data.forEach(emp => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${emp.phone}</td>
+          <td>${emp.hasSignedPolicy ? "Yes" : "No"}</td>
+          <td>
+            <button onclick="deleteEmployee('${emp._id}')">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
+  });
+}
+
+function createEmployee() {
+  const phone = document.getElementById("phone").value;
+
+  fetch("http://localhost:5000/api/admin/create-employee", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token
+    },
+    body: JSON.stringify({ phone })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+    fetchEmployees();
+  });
+}
+
+function deleteEmployee(id) {
+  fetch(`http://localhost:5000/api/admin/delete-employee/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: token }
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+    fetchEmployees();
+  });
+}
+
+function logout() {
+  localStorage.removeItem("adminToken");
+  window.location.href = "index.html";
+}
+
+fetchEmployees();
+</script>
+
+</body>
+</html>

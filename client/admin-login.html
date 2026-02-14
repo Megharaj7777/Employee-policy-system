@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login</title>
+</head>
+<body>
+
+<h2>Admin Login</h2>
+
+<input type="text" id="username" placeholder="Username">
+<br><br>
+<input type="password" id="password" placeholder="Password">
+<br><br>
+<button onclick="adminLogin()">Login</button>
+
+<p id="error" style="color:red;"></p>
+
+<script>
+function adminLogin() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  fetch("http://localhost:5000/api/admin/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.token) {
+      localStorage.setItem("adminToken", data.token);
+      window.location.href = "admin-dashboard.html";
+    } else {
+      document.getElementById("error").innerText = data.message;
+    }
+  });
+}
+</script>
+
+</body>
+</html>
