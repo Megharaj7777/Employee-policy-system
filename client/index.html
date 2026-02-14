@@ -129,7 +129,7 @@ function sendOTP() {
   const phone = document.getElementById("phone").value;
   savedPhone = phone;
 
-  fetch("http://localhost:5000/api/employee/send-otp", {
+  fetch("https://employee-policy-system.onrender.com/api/employee/send-otp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone })
@@ -141,7 +141,7 @@ function sendOTP() {
 function verifyOTP() {
   const otp = document.getElementById("otp").value;
 
-  fetch("http://localhost:5000/api/employee/verify-otp", {
+  fetch("https://employee-policy-system.onrender.com/api/employee/verify-otp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone: savedPhone, otp })
@@ -161,7 +161,7 @@ function adminLogin() {
   const username = document.getElementById("adminUsername").value;
   const password = document.getElementById("adminPassword").value;
 
-  fetch("http://localhost:5000/api/admin/login", {
+  fetch("https://employee-policy-system.onrender.com/api/admin/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password })

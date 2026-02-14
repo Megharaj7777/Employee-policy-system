@@ -112,7 +112,7 @@ const token = localStorage.getItem("adminToken");
 if (!token) window.location.href = "index.html";
 
 function fetchEmployees() {
-  fetch("http://localhost:5000/api/admin/employees", {
+  fetch("https://employee-policy-system.onrender.com/api/admin/employees", {
     headers: { Authorization: token }
   })
   .then(res => res.json())
@@ -137,7 +137,7 @@ function fetchEmployees() {
 function createEmployee() {
   const phone = document.getElementById("phone").value;
 
-  fetch("http://localhost:5000/api/admin/create-employee", {
+  fetch("https://employee-policy-system.onrender.com/api/admin/create-employee", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -153,7 +153,7 @@ function createEmployee() {
 }
 
 function deleteEmployee(id) {
-  fetch(`http://localhost:5000/api/admin/delete-employee/${id}`, {
+  fetch(`https://employee-policy-system.onrender.com/api/admin/delete-employee/${id}`, {
     method: "DELETE",
     headers: { Authorization: token }
   })

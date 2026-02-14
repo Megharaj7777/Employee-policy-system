@@ -55,7 +55,7 @@ const token = localStorage.getItem("employeeToken");
 if (!token) window.location.href = "index.html";
 
 function signPolicy() {
-  fetch("http://localhost:5000/api/employee/sign-policy", {
+  fetch("https://employee-policy-system.onrender.com/api/employee/sign-policy", {
     method: "POST",
     headers: { Authorization: token }
   })
