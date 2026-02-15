@@ -136,8 +136,7 @@ function fetchEmployees() {
     const tbody = document.querySelector("#employeeTable tbody");
     tbody.innerHTML = "";
 
-    // Access the array from the key 'employees'
-    const employees = data.employees || [];
+    const employees = data.employees || []; // <-- important
 
     employees.forEach(emp => {
       tbody.innerHTML += `
