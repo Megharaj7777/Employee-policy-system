@@ -3,24 +3,87 @@
 <head>
   <title>Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #f4f6f9; }
-    .navbar { background: #667eea; padding: 15px; color: white; text-align: center; font-size: 18px; font-weight: bold; }
-    .container { padding: 30px; }
-    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    input { padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin: 5px 5px 5px 0; }
-    button { padding: 8px 15px; border: none; border-radius: 6px; background: #667eea; color: white; cursor: pointer; }
-    button:hover { background: #5a67d8; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: center; }
-    th { background: #667eea; color: white; }
-    .logout { background: red; margin-top: 15px; }
-    .search-box { margin-bottom: 10px; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+    }
+
+    .navbar {
+      background: #667eea;
+      padding: 15px;
+      color: white;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin: 5px 5px 5px 0;
+    }
+
+    button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #5a67d8;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #667eea;
+      color: white;
+    }
+
+    .logout {
+      background: red;
+      margin-top: 15px;
+    }
+
+    .search-box {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 
-<div class="navbar">Admin Dashboard</div>
+<div class="navbar">
+  Admin Dashboard
+</div>
 
 <div class="container">
 
@@ -35,7 +98,11 @@
   <!-- Employee List -->
   <div class="card">
     <h3>Employee List</h3>
-    <input type="text" id="search" class="search-box" placeholder="Search by name or phone" onkeyup="searchUser()">
+
+    <input type="text" id="search" class="search-box"
+           placeholder="Search by name or phone"
+           onkeyup="searchUser()">
+
     <table id="employeeTable">
       <thead>
         <tr>
@@ -47,21 +114,17 @@
       </thead>
       <tbody></tbody>
     </table>
+
     <button class="logout" onclick="logout()">Logout</button>
   </div>
 
 </div>
 
 <script>
-// ===========================
-// Admin Token
-// ===========================
+
 const token = localStorage.getItem("adminToken");
 if (!token) window.location.href = "index.html";
 
-// ===========================
-// Fetch Employees
-// ===========================
 function fetchEmployees() {
   fetch("https://employee-policy-system.onrender.com/api/admin/employees", {
     headers: { Authorization: `Bearer ${token}` }
@@ -71,31 +134,24 @@ function fetchEmployees() {
     const tbody = document.querySelector("#employeeTable tbody");
     tbody.innerHTML = "";
 
-    // Use data.employees if backend returns { employees: [...] }
-    const employees = data.employees || data;
-
-    employees.forEach(emp => {
+    data.forEach(emp => {
       tbody.innerHTML += `
         <tr>
           <td>${emp.name}</td>
           <td>${emp.phone}</td>
-          <td>${emp.hasSignedPolicy ? "Agreed" : "Pending"}</td>
+          <td>${emp.policyStatus}</td>
           <td>
             <button onclick="deleteEmployee('${emp._id}')">Delete</button>
           </td>
         </tr>
       `;
     });
-  })
-  .catch(err => console.error("Fetch Employees Error:", err));
+  });
 }
 
-// ===========================
-// Create Employee
-// ===========================
 function createEmployee() {
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
 
   if (!name || !phone) {
     alert("Please enter name and phone");
@@ -113,16 +169,10 @@ function createEmployee() {
   .then(res => res.json())
   .then(data => {
     alert(data.message);
-    document.getElementById("name").value = "";
-    document.getElementById("phone").value = "";
     fetchEmployees();
-  })
-  .catch(err => console.error("Create Employee Error:", err));
+  });
 }
 
-// ===========================
-// Delete Employee
-// ===========================
 function deleteEmployee(id) {
   fetch(`https://employee-policy-system.onrender.com/api/admin/delete-employee/${id}`, {
     method: "DELETE",
@@ -132,33 +182,26 @@ function deleteEmployee(id) {
   .then(data => {
     alert(data.message);
     fetchEmployees();
-  })
-  .catch(err => console.error("Delete Employee Error:", err));
-}
-
-// ===========================
-// Search Employee
-// ===========================
-function searchUser() {
-  const value = document.getElementById("search").value.toLowerCase();
-  const rows = document.querySelectorAll("#employeeTable tbody tr");
-  rows.forEach(row => {
-    row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
   });
 }
 
-// ===========================
-// Logout
-// ===========================
+function searchUser() {
+  const value = document.getElementById("search").value.toLowerCase();
+  const rows = document.querySelectorAll("#employeeTable tbody tr");
+
+  rows.forEach(row => {
+    row.style.display =
+      row.innerText.toLowerCase().includes(value) ? "" : "none";
+  });
+}
+
 function logout() {
   localStorage.removeItem("adminToken");
   window.location.href = "index.html";
 }
 
-// ===========================
-// Initial Load
-// ===========================
 fetchEmployees();
+
 </script>
 
 </body>
