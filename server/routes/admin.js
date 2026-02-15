@@ -45,7 +45,9 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// GET ALL EMPLOYEES
+// =========================
+// 🔹 GET ALL EMPLOYEES
+// =========================
 router.get("/employees", auth, async (req, res) => {
   try {
     if (req.user.role !== "admin") {
@@ -53,15 +55,13 @@ router.get("/employees", auth, async (req, res) => {
     }
 
     const users = await User.find().select("-otp -otpExpiry -__v");
-    // wrap the array inside 'employees' key
-    res.json({ employees: users });
+    res.json({ employees: users }); // Wrap the array in { employees: [...] }
+
   } catch (error) {
     console.error("Fetch Employees Error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
-
-
 
 // =========================
 // 🔹 CREATE EMPLOYEE
@@ -89,7 +89,7 @@ router.post("/create-employee", auth, async (req, res) => {
     const user = new User({
       name,
       phone,
-      hasSignedPolicy: false // matches schema
+      hasSignedPolicy: false
     });
 
     await user.save();
