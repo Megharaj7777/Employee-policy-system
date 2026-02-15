@@ -53,12 +53,14 @@ router.get("/employees", auth, async (req, res) => {
     }
 
     const users = await User.find().select("-otp -otpExpiry -__v");
-    res.json(users); // <-- send array directly
+    // wrap the array inside 'employees' key
+    res.json({ employees: users });
   } catch (error) {
     console.error("Fetch Employees Error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
+
 
 
 // =========================
