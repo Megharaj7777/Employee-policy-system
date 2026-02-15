@@ -121,10 +121,12 @@
 </div>
 
 <script>
-
 const token = localStorage.getItem("adminToken");
 if (!token) window.location.href = "index.html";
 
+// -------------------------
+// Fetch Employees
+// -------------------------
 function fetchEmployees() {
   fetch("https://employee-policy-system.onrender.com/api/admin/employees", {
     headers: { Authorization: `Bearer ${token}` }
@@ -134,9 +136,7 @@ function fetchEmployees() {
     const tbody = document.querySelector("#employeeTable tbody");
     tbody.innerHTML = "";
 
-    // Correct: get the array from data.employees
     const employees = data.employees || [];
-
     employees.forEach(emp => {
       tbody.innerHTML += `
         <tr>
@@ -153,10 +153,12 @@ function fetchEmployees() {
   .catch(err => console.error("Fetch Employees Error:", err));
 }
 
-
+// -------------------------
+// Create Employee
+// -------------------------
 function createEmployee() {
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
 
   if (!name || !phone) {
     alert("Please enter name and phone");
@@ -175,9 +177,13 @@ function createEmployee() {
   .then(data => {
     alert(data.message);
     fetchEmployees();
-  });
+  })
+  .catch(err => console.error("Create Employee Error:", err));
 }
 
+// -------------------------
+// Delete Employee
+// -------------------------
 function deleteEmployee(id) {
   fetch(`https://employee-policy-system.onrender.com/api/admin/delete-employee/${id}`, {
     method: "DELETE",
@@ -187,24 +193,31 @@ function deleteEmployee(id) {
   .then(data => {
     alert(data.message);
     fetchEmployees();
-  });
+  })
+  .catch(err => console.error("Delete Employee Error:", err));
 }
 
+// -------------------------
+// Search Employee
+// -------------------------
 function searchUser() {
   const value = document.getElementById("search").value.toLowerCase();
   const rows = document.querySelectorAll("#employeeTable tbody tr");
-
   rows.forEach(row => {
     row.style.display =
       row.innerText.toLowerCase().includes(value) ? "" : "none";
   });
 }
 
+// -------------------------
+// Logout
+// -------------------------
 function logout() {
   localStorage.removeItem("adminToken");
   window.location.href = "index.html";
 }
 
+// Initial fetch
 fetchEmployees();
 
 </script>
