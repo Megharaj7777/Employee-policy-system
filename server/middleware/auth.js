@@ -2,11 +2,13 @@ const jwt = require("jsonwebtoken");
 
 module.exports = function (req, res, next) {
   try {
-    const token = req.headers.authorization;
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "Access Denied" });
     }
+
+    const token = authHeader.split(" ")[1]; // Extract token after "Bearer "
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -14,6 +16,7 @@ module.exports = function (req, res, next) {
 
     next();
   } catch (error) {
+    console.error("Auth Middleware Error:", error);
     return res.status(401).json({ message: "Invalid Token" });
   }
 };
