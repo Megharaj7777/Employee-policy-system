@@ -101,16 +101,20 @@ router.post("/verify-otp", async (req, res) => {
 
 
 // =========================
-// 🔹 SIGN POLICY
+// 🔹 SIGN POLICY (Updated to match logic)
 // =========================
-
-router.post("/sign-policy", auth, async (req, res) => {
+router.post("/submit-policy", auth, async (req, res) => { // Renamed to match frontend
   try {
     const userId = req.user.id;
 
-    await User.findByIdAndUpdate(userId, {
-      hasSignedPolicy: true
-    });
+    const user = await User.findByIdAndUpdate(userId, {
+      hasSignedPolicy: true,
+      policyStatus: "agreed" // Added to ensure Admin Dashboard sees the change
+    }, { new: true });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.json({ message: "Policy Signed Successfully" });
 
@@ -119,6 +123,5 @@ router.post("/sign-policy", auth, async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 });
-
 
 module.exports = router;

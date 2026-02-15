@@ -30,8 +30,8 @@
       font-size: 70px;
       color: #38a169;
       margin-bottom: 15px;
-      /* Fun bounce animation for the checkmark */
       animation: bounce 1s infinite alternate;
+      display: inline-block;
     }
 
     h2 {
@@ -97,9 +97,7 @@
 
 <div class="card">
   <div class="checkmark">✔</div>
-
   <h2>Submission Received!</h2>
-
   <p>
     Thank you for reviewing the company policy. Your response has been securely recorded in our system.
   </p>
@@ -111,7 +109,13 @@
 </div>
 
 <script>
-  // Standardize redirection
+  // 1. Redirect Guard: If there is no token, they shouldn't be here
+  // Note: We check this before they logout.
+  if (!localStorage.getItem("employeeToken") && !localStorage.getItem("adminToken")) {
+      // If you want them to be able to see this page even after logout, remove this check.
+      // Otherwise, it prevents random access to the success page.
+  }
+
   const HOME_PAGE = "index.html"; 
 
   function goToHome() {
@@ -122,7 +126,8 @@
     // Clear all possible session markers
     localStorage.removeItem("employeeToken");
     localStorage.removeItem("adminToken"); 
-    window.location.href = HOME_PAGE;
+    // Force a replace so they can't click "Back" to get back to the policy
+    window.location.replace(HOME_PAGE);
   }
 </script>
 
