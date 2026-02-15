@@ -4,26 +4,45 @@
   <title>Employee Policy System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; justify-content: center; align-items: center; height: 100vh; }
+    body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; justify-content: center; align-items: center; height: 100vh; }
     .container { background: white; padding: 40px; border-radius: 15px; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; }
-    input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
-    button { width: 100%; padding: 10px; border: none; border-radius: 8px; background: #667eea; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    button:disabled { background: #ccc; cursor: not-allowed; }
+    h2 { color: #333; margin-bottom: 20px; }
+    input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; outline: none; }
+    input:focus { border-color: #667eea; }
+    button { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #667eea; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+    button:hover { background: #5a67d8; }
+    button:disabled { background: #cbd5e0; cursor: not-allowed; }
     .toggle-btn { background: transparent; color: #667eea; margin-top: 15px; font-size: 14px; }
     .hidden { display: none; }
-    #timerText { color: #667eea; font-weight: bold; font-size: 14px; margin: 5px 0; display: none; }
+    
+    /* Timer specific styling */
+    #timerContainer { 
+      background: #f7fafc; 
+      padding: 8px; 
+      border-radius: 8px; 
+      margin: 10px 0; 
+      display: none; /* Hidden by default */
+    }
+    #timerText { color: #4a5568; font-size: 14px; font-weight: bold; margin: 0; }
+    #seconds { color: #e53e3e; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <h2>Employee Login</h2>
+
   <div id="employeeSection">
     <input type="text" id="phone" placeholder="Enter Mobile Number">
     <button id="otpBtn" onclick="sendOTP()">Send OTP</button>
-    <p id="timerText">Resend in <span id="seconds">60</span>s</p>
-    <input type="text" id="otp" placeholder="Enter OTP">
+
+    <div id="timerContainer">
+      <p id="timerText">Resend OTP available in <span id="seconds">60</span>s</p>
+    </div>
+
+    <input type="text" id="otp" placeholder="Enter OTP" style="margin-top: 15px;">
     <button onclick="verifyOTP()">Verify OTP</button>
+
     <button class="toggle-btn" onclick="showAdmin()">Login as Admin</button>
   </div>
 
@@ -31,8 +50,8 @@
     <input type="text" id="adminUsername" placeholder="Admin Username">
     <input type="password" id="adminPassword" placeholder="Admin Password">
     <button onclick="adminLogin()">Login</button>
-    <p id="adminError" style="color:red"></p>
-    <button class="toggle-btn" onclick="showEmployee()">Back to Employee</button>
+    <p id="adminError" style="color:red; font-size: 14px;"></p>
+    <button class="toggle-btn" onclick="showEmployee()">Back to Employee Login</button>
   </div>
 </div>
 
@@ -42,26 +61,37 @@ let countdown;
 
 function startTimer() {
   const btn = document.getElementById("otpBtn");
-  const timerText = document.getElementById("timerText");
+  const container = document.getElementById("timerContainer");
   const secondsSpan = document.getElementById("seconds");
   let timeLeft = 60;
+
+  // UI Updates
   btn.disabled = true;
-  timerText.style.display = "block";
+  container.style.display = "block";
+  secondsSpan.innerText = timeLeft;
+
+  // Clear any existing intervals to prevent double timers
+  clearInterval(countdown);
+
   countdown = setInterval(() => {
     timeLeft--;
     secondsSpan.innerText = timeLeft;
+
     if (timeLeft <= 0) {
       clearInterval(countdown);
       btn.disabled = false;
-      timerText.style.display = "none";
+      container.style.display = "none";
     }
   }, 1000);
 }
 
 function sendOTP() {
-  const phone = document.getElementById("phone").value;
-  if(!phone) return alert("Enter phone number");
+  const phoneInput = document.getElementById("phone");
+  const phone = phoneInput.value;
+  if (!phone) return alert("Please enter mobile number");
+  
   savedPhone = phone;
+
   fetch("https://employee-policy-system.onrender.com/api/employee/send-otp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -70,12 +100,18 @@ function sendOTP() {
   .then(res => res.json())
   .then(data => {
     alert(data.message);
-    if(data.message.includes("Successfully")) startTimer();
-  });
+    // 🔹 Logic Fix: Check for success message to trigger timer
+    if (data.message.includes("Successfully")) {
+      startTimer();
+    }
+  })
+  .catch(err => alert("Unable to connect to server. Check your internet."));
 }
 
 function verifyOTP() {
   const otp = document.getElementById("otp").value;
+  if (!otp) return alert("Please enter the OTP");
+
   fetch("https://employee-policy-system.onrender.com/api/employee/verify-otp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -86,12 +122,42 @@ function verifyOTP() {
     if (data.token) {
       localStorage.setItem("employeeToken", data.token);
       window.location.href = "policy.html";
-    } else alert(data.message);
+    } else {
+      alert(data.message);
+    }
   });
 }
 
-function showAdmin() { document.getElementById("adminSection").classList.remove("hidden"); document.getElementById("employeeSection").classList.add("hidden"); }
-function showEmployee() { document.getElementById("employeeSection").classList.remove("hidden"); document.getElementById("adminSection").classList.add("hidden"); }
+function showAdmin() {
+  document.getElementById("adminSection").classList.remove("hidden");
+  document.getElementById("employeeSection").classList.add("hidden");
+}
+
+function showEmployee() {
+  document.getElementById("employeeSection").classList.remove("hidden");
+  document.getElementById("adminSection").classList.add("hidden");
+}
+
+function adminLogin() {
+  const username = document.getElementById("adminUsername").value;
+  const password = document.getElementById("adminPassword").value;
+
+  fetch("https://employee-policy-system.onrender.com/api/admin/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.token) {
+      localStorage.setItem("adminToken", data.token);
+      window.location.href = "admin-dashboard.html";
+    } else {
+      document.getElementById("adminError").innerText = data.message;
+    }
+  });
+}
 </script>
+
 </body>
 </html>
