@@ -2,203 +2,63 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Employee Dashboard - Policy Agreement</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Policy Agreement</title>
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .card {
-      background: white;
-      padding: 40px;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-
-    h2 { color: #2d3748; margin-bottom: 10px; }
-    p { color: #718096; margin-bottom: 25px; font-size: 14px; }
-
-    .radio-group {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 20px;
-      background: #f7fafc;
-      padding: 15px;
-      border-radius: 10px;
-    }
-
-    label {
-      font-weight: 600;
-      color: #4a5568;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    button {
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #667eea;
-      color: white;
-      cursor: pointer;
-      width: 100%;
-      font-weight: bold;
-      font-size: 16px;
-      transition: transform 0.2s, background 0.2s;
-      margin-bottom: 10px;
-    }
-
-    button:hover { background: #5a67d8; transform: translateY(-1px); }
-    
-    .btn-logout {
-      background: transparent;
-      color: #718096;
-      border: 1px solid #cbd5e0;
-      font-size: 14px;
-      margin-top: 15px;
-    }
-    
-    .btn-logout:hover {
-      background: #fff5f5;
-      color: #c53030;
-      border-color: #feb2b2;
-    }
-
-    #loading { display: none; color: #667eea; margin-top: 10px; font-size: 14px; }
-
-    /* Style for the "Already Signed" message */
-    #signedBanner {
-      display: none;
-      background: #e6fffa;
-      color: #2c7a7b;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      font-size: 13px;
-      font-weight: bold;
-    }
+    body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding-top: 50px; }
+    .card { background: white; padding: 30px; border-radius: 12px; width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+    .status-msg { background: #e6fffa; color: #2c7a7b; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: none; font-weight: bold; }
+    .radio-group { margin: 20px 0; display: flex; justify-content: space-around; }
+    button { width: 100%; padding: 10px; border: none; border-radius: 8px; background: #667eea; color: white; cursor: pointer; margin-top: 10px; }
+    .btn-logout { background: #cbd5e0; color: #4a5568; }
   </style>
 </head>
 <body>
-
 <div class="card">
   <h2>Company Policy</h2>
-  
-  <div id="signedBanner">✓ You have already acknowledged this policy.</div>
-
-  <p id="instructionText">Please review and acknowledge our updated company policy below.</p>
-
+  <div id="statusMsg" class="status-msg">✓ Policy already signed</div>
+  <p id="instr">Please review and select an option:</p>
   <div class="radio-group">
-    <label>
-      <input type="radio" name="policy" value="agreed"> Agree
-    </label>
-    <label>
-      <input type="radio" name="policy" value="disagreed"> Disagree
-    </label>
+    <label><input type="radio" name="policy" value="agreed"> Agree</label>
+    <label><input type="radio" name="policy" value="disagreed"> Disagree</label>
   </div>
-
-  <button id="submitBtn" onclick="submitPolicy()">Submit Decision</button>
-  
+  <button id="submitBtn" onclick="submitPolicy()">Submit</button>
   <button class="btn-logout" onclick="logout()">Logout</button>
-  
-  <div id="loading">Processing...</div>
 </div>
 
 <script>
   const token = localStorage.getItem("employeeToken");
-  if (!token) {
-    window.location.href = "index.html"; 
-  }
+  if (!token) window.location.href = "index.html";
 
-  // --- NEW: Check if user has already signed on page load ---
-  async function checkExistingStatus() {
-    try {
-      const response = await fetch("https://employee-policy-system.onrender.com/api/employee/me", {
-        method: "GET",
-        headers: { "Authorization": token }
+  async function checkStatus() {
+    const res = await fetch("https://employee-policy-system.onrender.com/api/employee/me", {
+      headers: { "Authorization": token }
+    });
+    const data = await res.json();
+    if (data.user && data.user.hasSignedPolicy) {
+      document.getElementById("submitBtn").style.display = "none";
+      document.getElementById("statusMsg").style.display = "block";
+      document.getElementById("instr").innerText = "Your recorded response:";
+      const radios = document.getElementsByName("policy");
+      radios.forEach(r => {
+        if (r.value === data.user.policyStatus) r.checked = true;
+        r.disabled = true;
       });
-      
-      const data = await response.json();
-
-      if (data.user && data.user.hasSignedPolicy) {
-        // 1. Hide the submit button
-        document.getElementById("submitBtn").style.display = "none";
-        // 2. Show the success banner
-        document.getElementById("signedBanner").style.display = "block";
-        document.getElementById("instructionText").innerText = "You have submitted the following response:";
-        
-        // 3. Select the stored choice and disable all radio inputs
-        const radios = document.getElementsByName("policy");
-        radios.forEach(radio => {
-          if (radio.value === data.user.policyStatus) {
-            radio.checked = true;
-          }
-          radio.disabled = true; // Prevent modification
-        });
-      }
-    } catch (error) {
-      console.error("Error checking status:", error);
     }
-  }
-
-  // Run the check immediately
-  checkExistingStatus();
-
-  function logout() {
-    localStorage.removeItem("employeeToken");
-    window.location.href = "index.html";
   }
 
   async function submitPolicy() {
     const selected = document.querySelector('input[name="policy"]:checked');
-    const btn = document.getElementById("submitBtn");
-    const loader = document.getElementById("loading");
-
-    if (!selected) {
-      alert("Please select an option before submitting.");
-      return;
-    }
-
-    btn.disabled = true;
-    loader.style.display = "block";
-
-    try {
-      const response = await fetch("https://employee-policy-system.onrender.com/api/employee/submit-policy", {
-        method: "POST",
-        headers: {
-          "Authorization": token, 
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ status: selected.value })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        window.location.href = "success.html";
-      } else {
-        alert(data.message || "Error: " + response.status);
-      }
-    } catch (error) {
-      alert("Unable to connect to the server.");
-    } finally {
-      btn.disabled = false;
-      loader.style.display = "none";
-    }
+    if (!selected) return alert("Select an option");
+    const res = await fetch("https://employee-policy-system.onrender.com/api/employee/submit-policy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": token },
+      body: JSON.stringify({ status: selected.value })
+    });
+    if (res.ok) window.location.href = "success.html";
   }
-</script>
 
+  function logout() { localStorage.removeItem("employeeToken"); window.location.href = "index.html"; }
+  checkStatus();
+</script>
 </body>
 </html>
