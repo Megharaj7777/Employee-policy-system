@@ -36,7 +36,7 @@
       padding: 8px;
       border-radius: 6px;
       border: 1px solid #ccc;
-      margin: 5px 5px 5px 0;
+      margin-right: 10px;
     }
 
     button {
@@ -73,10 +73,6 @@
       background: red;
       margin-top: 15px;
     }
-
-    .search-box {
-      margin-bottom: 10px;
-    }
   </style>
 </head>
 <body>
@@ -87,28 +83,19 @@
 
 <div class="container">
 
-  <!-- Create Employee -->
   <div class="card">
     <h3>Create Employee</h3>
-    <input type="text" id="name" placeholder="Enter Name">
     <input type="text" id="phone" placeholder="Enter Phone">
     <button onclick="createEmployee()">Create</button>
   </div>
 
-  <!-- Employee List -->
   <div class="card">
     <h3>Employee List</h3>
-
-    <input type="text" id="search" class="search-box"
-           placeholder="Search by name or phone"
-           onkeyup="searchUser()">
-
     <table id="employeeTable">
       <thead>
         <tr>
-          <th>Name</th>
           <th>Phone</th>
-          <th>Policy Status</th>
+          <th>Signed Policy</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -124,102 +111,65 @@
 const token = localStorage.getItem("adminToken");
 if (!token) window.location.href = "index.html";
 
-// -------------------------
-// Fetch Employees
-// -------------------------
 function fetchEmployees() {
   fetch("https://employee-policy-system.onrender.com/api/admin/employees", {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: token }
   })
   .then(res => res.json())
   .then(data => {
     const tbody = document.querySelector("#employeeTable tbody");
     tbody.innerHTML = "";
 
-    const employees = data.employees || [];
-    employees.forEach(emp => {
+    data.forEach(emp => {
       tbody.innerHTML += `
         <tr>
-          <td>${emp.name || "N/A"}</td>
-          <td>${emp.phone || "N/A"}</td>
-          <td>${emp.hasSignedPolicy ? "Agreed" : "Pending"}</td>
+          <td>${emp.phone}</td>
+          <td>${emp.hasSignedPolicy ? "Yes" : "No"}</td>
           <td>
             <button onclick="deleteEmployee('${emp._id}')">Delete</button>
           </td>
         </tr>
       `;
     });
-  })
-  .catch(err => console.error("Fetch Employees Error:", err));
+  });
 }
 
-// -------------------------
-// Create Employee
-// -------------------------
 function createEmployee() {
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-
-  if (!name || !phone) {
-    alert("Please enter name and phone");
-    return;
-  }
+  const phone = document.getElementById("phone").value;
 
   fetch("https://employee-policy-system.onrender.com/api/admin/create-employee", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      Authorization: token
     },
-    body: JSON.stringify({ name, phone })
+    body: JSON.stringify({ phone })
   })
   .then(res => res.json())
   .then(data => {
     alert(data.message);
     fetchEmployees();
-  })
-  .catch(err => console.error("Create Employee Error:", err));
-}
-
-// -------------------------
-// Delete Employee
-// -------------------------
-function deleteEmployee(id) {
-  fetch(`https://employee-policy-system.onrender.com/api/admin/delete-employee/${id}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  .then(res => res.json())
-  .then(data => {
-    alert(data.message);
-    fetchEmployees();
-  })
-  .catch(err => console.error("Delete Employee Error:", err));
-}
-
-// -------------------------
-// Search Employee
-// -------------------------
-function searchUser() {
-  const value = document.getElementById("search").value.toLowerCase();
-  const rows = document.querySelectorAll("#employeeTable tbody tr");
-  rows.forEach(row => {
-    row.style.display =
-      row.innerText.toLowerCase().includes(value) ? "" : "none";
   });
 }
 
-// -------------------------
-// Logout
-// -------------------------
+function deleteEmployee(id) {
+  fetch(`https://employee-policy-system.onrender.com/api/admin/delete-employee/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: token }
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+    fetchEmployees();
+  });
+}
+
 function logout() {
   localStorage.removeItem("adminToken");
   window.location.href = "index.html";
 }
 
-// Initial fetch
 fetchEmployees();
-
 </script>
 
 </body>
