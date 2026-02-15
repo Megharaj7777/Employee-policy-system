@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Policy Signed Successfully</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
       background: linear-gradient(135deg, #38ef7d, #11998e);
       display: flex;
       justify-content: center;
@@ -20,78 +20,110 @@
       padding: 40px;
       border-radius: 15px;
       text-align: center;
-      width: 380px;
+      width: 90%;
+      max-width: 380px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      animation: fadeIn 0.5s ease-in-out;
+      animation: fadeIn 0.5s ease-out;
     }
 
     .checkmark {
-      font-size: 60px;
+      font-size: 70px;
       color: #38a169;
       margin-bottom: 15px;
+      /* Fun bounce animation for the checkmark */
+      animation: bounce 1s infinite alternate;
     }
 
     h2 {
-      margin-bottom: 10px;
-      color: #333;
+      margin: 0 0 10px 0;
+      color: #2d3748;
     }
 
     p {
-      color: #555;
-      font-size: 14px;
+      color: #718096;
+      font-size: 15px;
+      line-height: 1.5;
       margin-bottom: 25px;
+    }
+
+    .btn-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       border: none;
       border-radius: 8px;
-      background: #11998e;
-      color: white;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 10px;
-      transition: 0.3s;
+      transition: all 0.2s;
     }
 
-    button:hover {
+    .btn-main {
+      background: #11998e;
+      color: white;
+    }
+
+    .btn-main:hover {
       background: #0f7f73;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: #718096;
+      border: 1px solid #cbd5e0;
+    }
+
+    .btn-outline:hover {
+      background: #f7fafc;
     }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    @keyframes bounce {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
   </style>
 </head>
 <body>
 
 <div class="card">
-
   <div class="checkmark">✔</div>
 
-  <h2>Policy Signed Successfully!</h2>
+  <h2>Submission Received!</h2>
 
   <p>
-    Thank you for accepting the company policy.  
-    Your confirmation has been recorded successfully.
+    Thank you for reviewing the company policy. Your response has been securely recorded in our system.
   </p>
 
-  <button onclick="goToLogin()">Back to Login</button>
-  <button onclick="logout()">Logout</button>
-
+  <div class="btn-container">
+    <button class="btn-main" onclick="logout()">Logout & Finish</button>
+    <button class="btn-outline" onclick="goToHome()">Back to Home</button>
+  </div>
 </div>
 
 <script>
-function goToLogin() {
-  window.location.href = "index.html";
-}
+  // Standardize redirection
+  const HOME_PAGE = "index.html"; 
 
-function logout() {
-  localStorage.removeItem("employeeToken");
-  window.location.href = "index.html";
-}
+  function goToHome() {
+    window.location.href = HOME_PAGE;
+  }
+
+  function logout() {
+    // Clear all possible session markers
+    localStorage.removeItem("employeeToken");
+    localStorage.removeItem("adminToken"); 
+    window.location.href = HOME_PAGE;
+  }
 </script>
 
 </body>
