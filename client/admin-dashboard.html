@@ -127,7 +127,7 @@ if (!token) window.location.href = "index.html";
 
 function fetchEmployees() {
   fetch("https://employee-policy-system.onrender.com/api/admin/employees", {
-    headers: { Authorization: token }
+    headers: { Authorization: `Bearer ${token}` }
   })
   .then(res => res.json())
   .then(data => {
@@ -162,7 +162,7 @@ function createEmployee() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: token
+      Authorization: `Bearer ${token}`
     },
     body: JSON.stringify({ name, phone })
   })
@@ -176,7 +176,7 @@ function createEmployee() {
 function deleteEmployee(id) {
   fetch(`https://employee-policy-system.onrender.com/api/admin/delete-employee/${id}`, {
     method: "DELETE",
-    headers: { Authorization: token }
+    headers: { Authorization: `Bearer ${token}` }
   })
   .then(res => res.json())
   .then(data => {
