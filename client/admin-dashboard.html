@@ -36,7 +36,7 @@
       padding: 8px;
       border-radius: 6px;
       border: 1px solid #ccc;
-      margin-right: 10px;
+      margin: 5px 5px 5px 0;
     }
 
     button {
@@ -73,6 +73,10 @@
       background: red;
       margin-top: 15px;
     }
+
+    .search-box {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -83,19 +87,28 @@
 
 <div class="container">
 
+  <!-- Create Employee -->
   <div class="card">
     <h3>Create Employee</h3>
+    <input type="text" id="name" placeholder="Enter Name">
     <input type="text" id="phone" placeholder="Enter Phone">
     <button onclick="createEmployee()">Create</button>
   </div>
 
+  <!-- Employee List -->
   <div class="card">
     <h3>Employee List</h3>
+
+    <input type="text" id="search" class="search-box"
+           placeholder="Search by name or phone"
+           onkeyup="searchUser()">
+
     <table id="employeeTable">
       <thead>
         <tr>
+          <th>Name</th>
           <th>Phone</th>
-          <th>Signed Policy</th>
+          <th>Policy Status</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -108,6 +121,7 @@
 </div>
 
 <script>
+
 const token = localStorage.getItem("adminToken");
 if (!token) window.location.href = "index.html";
 
@@ -123,8 +137,9 @@ function fetchEmployees() {
     data.forEach(emp => {
       tbody.innerHTML += `
         <tr>
+          <td>${emp.name}</td>
           <td>${emp.phone}</td>
-          <td>${emp.hasSignedPolicy ? "Yes" : "No"}</td>
+          <td>${emp.policyStatus}</td>
           <td>
             <button onclick="deleteEmployee('${emp._id}')">Delete</button>
           </td>
@@ -135,7 +150,13 @@ function fetchEmployees() {
 }
 
 function createEmployee() {
+  const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
+
+  if (!name || !phone) {
+    alert("Please enter name and phone");
+    return;
+  }
 
   fetch("https://employee-policy-system.onrender.com/api/admin/create-employee", {
     method: "POST",
@@ -143,7 +164,7 @@ function createEmployee() {
       "Content-Type": "application/json",
       Authorization: token
     },
-    body: JSON.stringify({ phone })
+    body: JSON.stringify({ name, phone })
   })
   .then(res => res.json())
   .then(data => {
@@ -164,12 +185,23 @@ function deleteEmployee(id) {
   });
 }
 
+function searchUser() {
+  const value = document.getElementById("search").value.toLowerCase();
+  const rows = document.querySelectorAll("#employeeTable tbody tr");
+
+  rows.forEach(row => {
+    row.style.display =
+      row.innerText.toLowerCase().includes(value) ? "" : "none";
+  });
+}
+
 function logout() {
-  localStorage.rzemoveItem("adminToken");
+  localStorage.removeItem("adminToken");
   window.location.href = "index.html";
 }
 
 fetchEmployees();
+
 </script>
 
 </body>
