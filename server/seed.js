@@ -7,6 +7,7 @@ mongoose.connect(process.env.MONGO_URI)
     console.log("Connected");
 
     await User.create({
+      name: "Megha Raj",       // <-- Add the name here
       phone: "+916361862624",
       hasSignedPolicy: false
     });

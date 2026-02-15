@@ -39,25 +39,38 @@
   </style>
 </head>
 <body>
-
 <div class="card">
   <h2>Company Policy</h2>
 
-  <p>
-    Please read and accept the company policy carefully.
-  </p>
+  <label>
+    <input type="radio" name="policy" value="agreed"> Agree
+  </label>
 
-  <button onclick="signPolicy()">Accept Policy</button>
+  <label>
+    <input type="radio" name="policy" value="disagreed"> Disagree
+  </label>
+
+  <button onclick="submitPolicy()">Submit</button>
 </div>
 
 <script>
 const token = localStorage.getItem("employeeToken");
-if (!token) window.location.href = "index.html";
 
-function signPolicy() {
-  fetch("https://employee-policy-system.onrender.com/api/employee/sign-policy", {
+function submitPolicy() {
+  const selected = document.querySelector('input[name="policy"]:checked');
+
+  if (!selected) {
+    alert("Please select option");
+    return;
+  }
+
+  fetch("https://employee-policy-system.onrender.com/api/employee/submit-policy", {
     method: "POST",
-    headers: { Authorization: token }
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ status: selected.value })
   })
   .then(res => res.json())
   .then(data => {
@@ -66,6 +79,7 @@ function signPolicy() {
   });
 }
 </script>
+
 
 </body>
 </html>

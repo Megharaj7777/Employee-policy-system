@@ -7,8 +7,8 @@ const Admin = require("../models/Admin");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
 
-
-
+// Helper: sanitize phone
+const sanitizePhone = (phone) => phone.replace(/\D/g, "");
 
 // =========================
 // 🔹 ADMIN LOGIN
@@ -16,6 +16,10 @@ const auth = require("../middleware/auth");
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
 
     const admin = await Admin.findOne({ username });
     if (!admin) {
@@ -36,11 +40,10 @@ router.post("/login", async (req, res) => {
     res.json({ message: "Login Successful", token });
 
   } catch (error) {
-    console.error("Admin Login Error:", error.message);
+    console.error("Admin Login Error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
-
 
 // =========================
 // 🔹 GET ALL EMPLOYEES
@@ -51,15 +54,14 @@ router.get("/employees", auth, async (req, res) => {
       return res.status(403).json({ message: "Access Denied" });
     }
 
-    const users = await User.find().select("-otp -otpExpiry");
-    res.json(users);
+    const users = await User.find().select("-otp -otpExpiry -__v");
+    res.json({ employees: users });
 
   } catch (error) {
-    console.error("Fetch Employees Error:", error.message);
+    console.error("Fetch Employees Error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
-
 
 // =========================
 // 🔹 CREATE EMPLOYEE
@@ -70,26 +72,35 @@ router.post("/create-employee", auth, async (req, res) => {
       return res.status(403).json({ message: "Access Denied" });
     }
 
-    let { phone } = req.body;
+    let { name, phone } = req.body;
 
-    phone = phone.replace(/\D/g, "");
+    if (!name || !phone) {
+      return res.status(400).json({ message: "Name and phone are required" });
+    }
+
+    name = name.trim();
+    phone = sanitizePhone(phone);
 
     const existing = await User.findOne({ phone });
     if (existing) {
-      return res.json({ message: "Employee already exists" });
+      return res.status(400).json({ message: "Employee already exists" });
     }
 
-    const user = new User({ phone });
+    const user = new User({
+      name,
+      phone,
+      hasSignedPolicy: false // matches schema
+    });
+
     await user.save();
 
-    res.json({ message: "Employee Created Successfully", user });
+    res.status(201).json({ message: "Employee Created Successfully", user });
 
   } catch (error) {
-    console.error("Create Employee Error:", error.message);
+    console.error("Create Employee Error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
-
 
 // =========================
 // 🔹 DELETE EMPLOYEE
@@ -100,15 +111,15 @@ router.delete("/delete-employee/:id", auth, async (req, res) => {
       return res.status(403).json({ message: "Access Denied" });
     }
 
-    await User.findByIdAndDelete(req.params.id);
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ message: "Employee not found" });
 
     res.json({ message: "Employee Deleted Successfully" });
 
   } catch (error) {
-    console.error("Delete Employee Error:", error.message);
+    console.error("Delete Employee Error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });
-
 
 module.exports = router;
