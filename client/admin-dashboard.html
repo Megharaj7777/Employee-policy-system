@@ -18,10 +18,14 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
         th { color: #666; font-weight: 600; text-transform: uppercase; font-size: 13px; }
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .signed { background: #e6fffa; color: #2c7a7b; }
-        .pending { background: #fffaf0; color: #9c4221; }
-        .btn-delete { background: #feb2b2; color: #9b2c2c; }
+        
+        /* Status Badges */
+        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .signed { background: #e6fffa; color: #2c7a7b; border: 1px solid #b2f5ea; }
+        .disagreed { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; } /* 🔹 NEW: Disagree Style */
+        .pending { background: #fffaf0; color: #9c4221; border: 1px solid #fbd38d; }
+        
+        .btn-delete { background: #feb2b2; color: #9b2c2c; padding: 8px 15px; }
         .btn-delete:hover { background: #fc8181; }
         .logout-btn { background: #4a5568; margin-top: 20px; }
         #loader { text-align: center; padding: 20px; color: #4e54c8; font-weight: bold; }
@@ -63,7 +67,6 @@
     const API_BASE = "https://employee-policy-system.onrender.com/api/admin";
     const token = localStorage.getItem("adminToken");
 
-    // Guard Clause
     if (!token) window.location.href = "index.html";
 
     async function fetchEmployees() {
@@ -75,20 +78,17 @@
             const res = await fetch(`${API_BASE}/employees`, {
                 method: 'GET',
                 headers: { 
-                    "Authorization": token, // Matches your strict middleware
+                    "Authorization": token,
                     "Content-Type": "application/json"
                 }
             });
 
             if (res.status === 401 || res.status === 403) {
-                alert("Session expired. Please login again.");
                 logout();
                 return;
             }
 
             const data = await res.json();
-            
-            // Critical Fix: Matching your router's { employees: users } structure
             const employees = data.employees || [];
 
             tbody.innerHTML = "";
@@ -96,14 +96,30 @@
             table.style.display = "table";
 
             employees.forEach(emp => {
-                const isSigned = emp.hasSignedPolicy;
+                // 🔹 LOGIC FIX: Check specific status strings
+                let statusClass = 'pending';
+                let statusLabel = '○ Pending';
+
+                if (emp.hasSignedPolicy) {
+                    if (emp.policyStatus === 'agreed') {
+                        statusClass = 'signed';
+                        statusLabel = '● Agreed';
+                    } else if (emp.policyStatus === 'disagreed') {
+                        statusClass = 'disagreed';
+                        statusLabel = '● Disagreed';
+                    } else {
+                        statusClass = 'signed';
+                        statusLabel = '● Signed';
+                    }
+                }
+
                 const row = `
                     <tr>
                         <td><strong>${emp.name}</strong></td>
                         <td>${emp.phone}</td>
                         <td>
-                            <span class="status-badge ${isSigned ? 'signed' : 'pending'}">
-                                ${isSigned ? '● Signed' : '○ Pending'}
+                            <span class="status-badge ${statusClass}">
+                                ${statusLabel}
                             </span>
                         </td>
                         <td>
@@ -116,20 +132,18 @@
 
             if (employees.length === 0) {
                 loader.style.display = "block";
-                loader.innerText = "No employees found in records.";
+                loader.innerText = "No employees found.";
                 table.style.display = "none";
             }
 
         } catch (err) {
             loader.innerText = "Connection Error: Backend is unreachable.";
-            console.error(err);
         }
     }
 
     async function createEmployee() {
         const name = document.getElementById("nameInput").value;
         const phone = document.getElementById("phoneInput").value;
-
         if (!name || !phone) return alert("Please fill all fields");
 
         try {
@@ -142,32 +156,29 @@
                 body: JSON.stringify({ name, phone })
             });
 
-            const result = await res.json();
             if (res.ok) {
                 document.getElementById("nameInput").value = "";
                 document.getElementById("phoneInput").value = "";
                 fetchEmployees();
             } else {
+                const result = await res.json();
                 alert(result.message);
             }
         } catch (err) {
-            alert("System error while creating employee.");
+            alert("System error.");
         }
     }
 
     async function deleteEmployee(id) {
-        if (!confirm("Delete this employee permanently?")) return;
-
+        if (!confirm("Delete permanently?")) return;
         try {
             const res = await fetch(`${API_BASE}/delete-employee/${id}`, {
                 method: "DELETE",
                 headers: { "Authorization": token }
             });
-            const result = await res.json();
-            alert(result.message);
             fetchEmployees();
         } catch (err) {
-            alert("Could not delete record.");
+            alert("Could not delete.");
         }
     }
 
@@ -176,7 +187,6 @@
         window.location.href = "index.html";
     }
 
-    // Initial Fetch
     fetchEmployees();
 </script>
 </body>
