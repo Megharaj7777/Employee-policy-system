@@ -62,7 +62,6 @@
 
     button:hover { background: #5a67d8; transform: translateY(-1px); }
     
-    /* Logout button style */
     .btn-logout {
       background: transparent;
       color: #718096;
@@ -78,13 +77,28 @@
     }
 
     #loading { display: none; color: #667eea; margin-top: 10px; font-size: 14px; }
+
+    /* Style for the "Already Signed" message */
+    #signedBanner {
+      display: none;
+      background: #e6fffa;
+      color: #2c7a7b;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
 
 <div class="card">
   <h2>Company Policy</h2>
-  <p>Please review and acknowledge our updated company policy below.</p>
+  
+  <div id="signedBanner">✓ You have already acknowledged this policy.</div>
+
+  <p id="instructionText">Please review and acknowledge our updated company policy below.</p>
 
   <div class="radio-group">
     <label>
@@ -108,7 +122,40 @@
     window.location.href = "index.html"; 
   }
 
-  // Logout Function
+  // --- NEW: Check if user has already signed on page load ---
+  async function checkExistingStatus() {
+    try {
+      const response = await fetch("https://employee-policy-system.onrender.com/api/employee/me", {
+        method: "GET",
+        headers: { "Authorization": token }
+      });
+      
+      const data = await response.json();
+
+      if (data.user && data.user.hasSignedPolicy) {
+        // 1. Hide the submit button
+        document.getElementById("submitBtn").style.display = "none";
+        // 2. Show the success banner
+        document.getElementById("signedBanner").style.display = "block";
+        document.getElementById("instructionText").innerText = "You have submitted the following response:";
+        
+        // 3. Select the stored choice and disable all radio inputs
+        const radios = document.getElementsByName("policy");
+        radios.forEach(radio => {
+          if (radio.value === data.user.policyStatus) {
+            radio.checked = true;
+          }
+          radio.disabled = true; // Prevent modification
+        });
+      }
+    } catch (error) {
+      console.error("Error checking status:", error);
+    }
+  }
+
+  // Run the check immediately
+  checkExistingStatus();
+
   function logout() {
     localStorage.removeItem("employeeToken");
     window.location.href = "index.html";
@@ -137,17 +184,9 @@
         body: JSON.stringify({ status: selected.value })
       });
 
-      const contentType = response.headers.get("content-type");
-      let data;
-
-      if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-      } else {
-        throw new Error("Invalid server response.");
-      }
+      const data = await response.json();
 
       if (response.ok) {
-        alert(data.message);
         window.location.href = "success.html";
       } else {
         alert(data.message || "Error: " + response.status);

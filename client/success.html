@@ -62,6 +62,7 @@
       transition: all 0.2s;
     }
 
+    /* Primary Action: Go back to see the policy */
     .btn-main {
       background: #11998e;
       color: white;
@@ -72,6 +73,7 @@
       transform: translateY(-1px);
     }
 
+    /* Secondary Action: Logout */
     .btn-outline {
       background: transparent;
       color: #718096;
@@ -80,6 +82,8 @@
 
     .btn-outline:hover {
       background: #f7fafc;
+      color: #c53030;
+      border-color: #feb2b2;
     }
 
     @keyframes fadeIn {
@@ -97,37 +101,34 @@
 
 <div class="card">
   <div class="checkmark">✔</div>
-  <h2>Submission Received!</h2>
+  <h2>Success!</h2>
   <p>
-    Thank you for reviewing the company policy. Your response has been securely recorded in our system.
+    Your response has been securely recorded. You can now return to the home page to view your signed policy or logout.
   </p>
 
   <div class="btn-container">
-    <button class="btn-main" onclick="logout()">Logout & Finish</button>
-    <button class="btn-outline" onclick="goToHome()">Back to Home</button>
+    <button class="btn-main" onclick="goToPolicy()">Back to Home</button>
+    
+    <button class="btn-outline" onclick="logout()">Logout</button>
   </div>
 </div>
 
 <script>
-  // 1. Redirect Guard: If there is no token, they shouldn't be here
-  // Note: We check this before they logout.
-  if (!localStorage.getItem("employeeToken") && !localStorage.getItem("adminToken")) {
-      // If you want them to be able to see this page even after logout, remove this check.
-      // Otherwise, it prevents random access to the success page.
+  // Guard Clause: Redirect to login if no token found
+  if (!localStorage.getItem("employeeToken")) {
+      window.location.href = "index.html";
   }
 
-  const HOME_PAGE = "index.html"; 
-
-  function goToHome() {
-    window.location.href = HOME_PAGE;
+  function goToPolicy() {
+    // This takes them back to the policy page where our new checkStatus logic
+    // will show them their choice in read-only mode.
+    window.location.href = "policy.html";
   }
 
   function logout() {
-    // Clear all possible session markers
     localStorage.removeItem("employeeToken");
     localStorage.removeItem("adminToken"); 
-    // Force a replace so they can't click "Back" to get back to the policy
-    window.location.replace(HOME_PAGE);
+    window.location.replace("index.html");
   }
 </script>
 
