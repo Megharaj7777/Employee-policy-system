@@ -134,20 +134,25 @@ function fetchEmployees() {
     const tbody = document.querySelector("#employeeTable tbody");
     tbody.innerHTML = "";
 
-    data.forEach(emp => {
+    // Correct: get the array from data.employees
+    const employees = data.employees || [];
+
+    employees.forEach(emp => {
       tbody.innerHTML += `
         <tr>
-          <td>${emp.name}</td>
-          <td>${emp.phone}</td>
-          <td>${emp.policyStatus}</td>
+          <td>${emp.name || "N/A"}</td>
+          <td>${emp.phone || "N/A"}</td>
+          <td>${emp.hasSignedPolicy ? "Agreed" : "Pending"}</td>
           <td>
             <button onclick="deleteEmployee('${emp._id}')">Delete</button>
           </td>
         </tr>
       `;
     });
-  });
+  })
+  .catch(err => console.error("Fetch Employees Error:", err));
 }
+
 
 function createEmployee() {
   const name = document.getElementById("name").value;
