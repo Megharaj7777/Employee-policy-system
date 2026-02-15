@@ -127,7 +127,6 @@ if (!token) window.location.href = "index.html";
 // Helper: sanitize phone number
 const sanitizePhone = (phone) => phone.replace(/\D/g, "");
 
-// Fetch all employees and display
 function fetchEmployees() {
   fetch("https://employee-policy-system.onrender.com/api/admin/employees", {
     headers: { Authorization: `Bearer ${token}` }
@@ -137,8 +136,8 @@ function fetchEmployees() {
     const tbody = document.querySelector("#employeeTable tbody");
     tbody.innerHTML = "";
 
-    // Check if backend returns array directly
-    const employees = Array.isArray(data) ? data : data.employees || [];
+    // Access the array from the key 'employees'
+    const employees = data.employees || [];
 
     employees.forEach(emp => {
       tbody.innerHTML += `
@@ -155,6 +154,7 @@ function fetchEmployees() {
   })
   .catch(err => console.error("Fetch Employees Error:", err));
 }
+
 
 // Create a new employee
 function createEmployee() {
