@@ -5,34 +5,74 @@
     <title>Admin Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; }
-        .navbar { background: #4e54c8; background: linear-gradient(to right, #8f94fb, #4e54c8); padding: 15px; color: white; text-align: center; font-size: 22px; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .container { padding: 30px; max-width: 1100px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        h3 { margin-top: 0; color: #333; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
-        .input-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
-        input { flex: 1; min-width: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
-        input:focus { border-color: #4e54c8; }
-        button { padding: 12px 25px; border: none; border-radius: 8px; background: #4e54c8; color: white; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        button:hover { background: #3a40a8; transform: translateY(-1px); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { color: #666; font-weight: 600; text-transform: uppercase; font-size: 13px; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+        
+        /* Navbar - Adjusted for mobile text size */
+        .navbar { 
+            background: linear-gradient(to right, #8f94fb, #4e54c8); 
+            padding: 15px; 
+            color: white; 
+            text-align: center; 
+            font-size: 20px; 
+            font-weight: bold; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+
+        .container { padding: 15px; max-width: 1100px; margin: auto; }
+
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        h3 { margin-top: 0; color: #333; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; font-size: 18px; }
+
+        /* 🔹 Responsive Input Group */
+        .input-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        
+        input { 
+            flex: 1; 
+            min-width: 100%; /* Force full width on mobile */
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            outline: none; 
+            font-size: 16px; /* Prevents iOS zoom-on-focus */
+        }
+
+        button { 
+            width: 100%; /* Full width buttons on mobile */
+            padding: 12px 25px; 
+            border: none; 
+            border-radius: 8px; 
+            background: #4e54c8; 
+            color: white; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: 0.3s; 
+        }
+
+        /* 🔹 Table Responsiveness */
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 500px; } /* Ensures table doesn't get squashed */
+        
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
         
         /* Status Badges */
-        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; white-space: nowrap; }
         .signed { background: #e6fffa; color: #2c7a7b; border: 1px solid #b2f5ea; }
         .disagreed { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; } 
         .pending { background: #fffaf0; color: #9c4221; border: 1px solid #fbd38d; }
         
-        .btn-delete { background: #feb2b2; color: #9b2c2c; padding: 8px 15px; }
-        .btn-delete:hover { background: #fc8181; }
+        .btn-delete { background: #feb2b2; color: #9b2c2c; width: auto; padding: 6px 12px; font-size: 12px; }
         .logout-btn { background: #4a5568; margin-top: 20px; }
-        #loader { text-align: center; padding: 20px; color: #4e54c8; font-weight: bold; }
-        
-        /* Search Bar Specific */
-        .search-container { margin-bottom: 20px; }
-        #searchInput { width: 100%; border: 2px solid #e2e8f0; }
+
+        /* 🔹 MEDIA QUERIES for Desktop */
+        @media (min-width: 768px) {
+            .container { padding: 30px; }
+            input { min-width: 200px; }
+            button { width: auto; }
+            h3 { font-size: 22px; }
+            .navbar { font-size: 24px; }
+        }
     </style>
 </head>
 <body>
@@ -41,10 +81,10 @@
 
 <div class="container">
     <div class="card">
-        <h3>Create Employee Account</h3>
+        <h3>Create Account</h3>
         <div class="input-group">
-            <input type="text" id="nameInput" placeholder="Enter Full Name">
-            <input type="text" id="phoneInput" placeholder="Enter Phone Number">
+            <input type="text" id="nameInput" placeholder="Full Name">
+            <input type="text" id="phoneInput" placeholder="Phone Number">
             <button onclick="createEmployee()">Add Employee</button>
         </div>
     </div>
@@ -52,23 +92,25 @@
     <div class="card">
         <h3>Employee Directory</h3>
         
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="🔍 Search by name or phone number..." onkeyup="filterEmployees()">
+        <div class="input-group" style="margin-bottom: 20px;">
+            <input type="text" id="searchInput" placeholder="🔍 Search name or phone..." onkeyup="filterEmployees()">
         </div>
 
-        <div id="loader">Syncing with database...</div>
+        <div id="loader" style="text-align: center; padding: 20px;">Syncing...</div>
         
-        <table id="employeeTable" style="display: none;">
-            <thead>
-                <tr>
-                    <th>Full Name</th>
-                    <th>Phone Number</th>
-                    <th>Policy Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table id="employeeTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
         
         <button class="logout-btn" onclick="logout()">Secure Logout</button>
     </div>
@@ -223,5 +265,6 @@
 
     fetchEmployees();
 </script>
+
 </body>
 </html>
