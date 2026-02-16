@@ -22,13 +22,17 @@
         /* Status Badges */
         .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
         .signed { background: #e6fffa; color: #2c7a7b; border: 1px solid #b2f5ea; }
-        .disagreed { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; } /* 🔹 NEW: Disagree Style */
+        .disagreed { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; } 
         .pending { background: #fffaf0; color: #9c4221; border: 1px solid #fbd38d; }
         
         .btn-delete { background: #feb2b2; color: #9b2c2c; padding: 8px 15px; }
         .btn-delete:hover { background: #fc8181; }
         .logout-btn { background: #4a5568; margin-top: 20px; }
         #loader { text-align: center; padding: 20px; color: #4e54c8; font-weight: bold; }
+        
+        /* Search Bar Specific */
+        .search-container { margin-bottom: 20px; }
+        #searchInput { width: 100%; border: 2px solid #e2e8f0; }
     </style>
 </head>
 <body>
@@ -47,7 +51,13 @@
 
     <div class="card">
         <h3>Employee Directory</h3>
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="🔍 Search by name or phone number..." onkeyup="filterEmployees()">
+        </div>
+
         <div id="loader">Syncing with database...</div>
+        
         <table id="employeeTable" style="display: none;">
             <thead>
                 <tr>
@@ -59,6 +69,7 @@
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
+        
         <button class="logout-btn" onclick="logout()">Secure Logout</button>
     </div>
 </div>
@@ -68,6 +79,30 @@
     const token = localStorage.getItem("adminToken");
 
     if (!token) window.location.href = "index.html";
+
+    // 🔹 Search Filter Function
+    function filterEmployees() {
+        const input = document.getElementById("searchInput");
+        const filter = input.value.toLowerCase();
+        const tbody = document.getElementById("tableBody");
+        const tr = tbody.getElementsByTagName("tr");
+
+        for (let i = 0; i < tr.length; i++) {
+            const nameCell = tr[i].getElementsByTagName("td")[0];
+            const phoneCell = tr[i].getElementsByTagName("td")[1];
+            
+            if (nameCell || phoneCell) {
+                const nameText = nameCell.textContent || nameCell.innerText;
+                const phoneText = phoneCell.textContent || phoneCell.innerText;
+                
+                if (nameText.toLowerCase().indexOf(filter) > -1 || phoneText.indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
 
     async function fetchEmployees() {
         const loader = document.getElementById("loader");
@@ -96,7 +131,6 @@
             table.style.display = "table";
 
             employees.forEach(emp => {
-                // 🔹 LOGIC FIX: Check specific status strings
                 let statusClass = 'pending';
                 let statusLabel = '○ Pending';
 
