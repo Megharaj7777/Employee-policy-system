@@ -3,62 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <title>Policy Agreement</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding-top: 50px; }
-    .card { background: white; padding: 30px; border-radius: 12px; width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
-    .status-msg { background: #e6fffa; color: #2c7a7b; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: none; font-weight: bold; }
-    .radio-group { margin: 20px 0; display: flex; justify-content: space-around; }
-    button { width: 100%; padding: 10px; border: none; border-radius: 8px; background: #667eea; color: white; cursor: pointer; margin-top: 10px; }
-    .btn-logout { background: #cbd5e0; color: #4a5568; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
+    .card { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+    
+    /* 🔹 User Greeting Style */
+    .user-info { margin-bottom: 20px; padding: 10px; border-bottom: 2px solid #eee; }
+    .user-name { color: #4e54c8; font-weight: bold; font-size: 1.2rem; }
+    
+    .status-msg { background: #e6fffa; color: #2c7a7b; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; font-weight: bold; border: 1px solid #b2f5ea; }
+    .radio-group { margin: 25px 0; display: flex; justify-content: space-around; background: #f8fafc; padding: 15px; border-radius: 8px; }
+    button { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #4e54c8; color: white; cursor: pointer; margin-top: 10px; font-weight: bold; transition: 0.3s; }
+    button:hover { background: #3a40a8; }
+    .btn-logout { background: #cbd5e0; color: #4a5568; margin-top: 20px; }
+    .btn-logout:hover { background: #a0aec0; }
   </style>
 </head>
 <body>
+
 <div class="card">
-  <h2>Company Policy</h2>
-  <div id="statusMsg" class="status-msg">✓ Policy already signed</div>
-  <p id="instr">Please review and select an option:</p>
-  <div class="radio-group">
-    <label><input type="radio" name="policy" value="agreed"> Agree</label>
-    <label><input type="radio" name="policy" value="disagreed"> Disagree</label>
+  <div class="user-info">
+    Welcome, <span id="displayName" class="user-name">Loading...</span>
   </div>
-  <button id="submitBtn" onclick="submitPolicy()">Submit</button>
+
+  <h2>Company Policy Agreement</h2>
+  
+  <div id="statusMsg" class="status-msg">✓ You have already recorded your response.</div>
+  
+  <p id="instr">Please review the company policy and select your decision:</p>
+  
+  <div class="radio-group">
+    <label><input type="radio" name="policy" value="agreed"> I Agree</label>
+    <label><input type="radio" name="policy" value="disagreed"> I Disagree</label>
+  </div>
+
+  <button id="submitBtn" onclick="submitPolicy()">Submit Response</button>
   <button class="btn-logout" onclick="logout()">Logout</button>
 </div>
 
 <script>
   const token = localStorage.getItem("employeeToken");
+  
+  // Security Guard: If no token, kick back to login
   if (!token) window.location.href = "index.html";
 
-  async function checkStatus() {
-    const res = await fetch("https://employee-policy-system.onrender.com/api/employee/me", {
-      headers: { "Authorization": token }
-    });
-    const data = await res.json();
-    if (data.user && data.user.hasSignedPolicy) {
-      document.getElementById("submitBtn").style.display = "none";
-      document.getElementById("statusMsg").style.display = "block";
-      document.getElementById("instr").innerText = "Your recorded response:";
-      const radios = document.getElementsByName("policy");
-      radios.forEach(r => {
-        if (r.value === data.user.policyStatus) r.checked = true;
-        r.disabled = true;
+  // 🔹 Fetch User Data on Load
+  async function loadUserData() {
+    try {
+      const res = await fetch("https://employee-policy-system.onrender.com/api/employee/me", {
+        headers: { "Authorization": token }
       });
+
+      if (!res.ok) throw new Error("Unauthorized");
+
+      const data = await res.json();
+      const user = data.user;
+
+      // 1. Display the Name
+      document.getElementById("displayName").innerText = user.name;
+
+      // 2. Check if already signed
+      if (user.hasSignedPolicy) {
+        document.getElementById("submitBtn").style.display = "none";
+        document.getElementById("statusMsg").style.display = "block";
+        document.getElementById("instr").innerHTML = `Your recorded response: <strong>${user.policyStatus.toUpperCase()}</strong>`;
+        
+        // Disable and check the correct radio button
+        const radios = document.getElementsByName("policy");
+        radios.forEach(r => {
+          if (r.value === user.policyStatus) r.checked = true;
+          r.disabled = true;
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      logout();
     }
   }
 
   async function submitPolicy() {
     const selected = document.querySelector('input[name="policy"]:checked');
-    if (!selected) return alert("Select an option");
+    if (!selected) return alert("Please select either Agree or Disagree.");
+
     const res = await fetch("https://employee-policy-system.onrender.com/api/employee/submit-policy", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": token },
+      headers: { 
+        "Content-Type": "application/json", 
+        "Authorization": token 
+      },
       body: JSON.stringify({ status: selected.value })
     });
-    if (res.ok) window.location.href = "success.html";
+
+    if (res.ok) {
+      alert("Response submitted successfully!");
+      location.reload(); // Refresh to show the read-only state
+    } else {
+      alert("Error submitting response.");
+    }
   }
 
-  function logout() { localStorage.removeItem("employeeToken"); window.location.href = "index.html"; }
-  checkStatus();
+  function logout() {
+    localStorage.removeItem("employeeToken");
+    window.location.href = "index.html";
+  }
+
+  // Initial load
+  loadUserData();
 </script>
+
 </body>
 </html>
