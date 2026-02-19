@@ -126,299 +126,134 @@
 </div>
 
 <script>
-    const API_BASE = "https://employee-policy-system.onrender.com/api/admin";
+const API_BASE = "https://employee-policy-system.onrender.com/api/admin";
+const token = localStorage.getItem("adminToken");
 
-    const token = localStorage.getItem("adminToken");
+// Redirect immediately if no token
+if (!token) window.location.href = "index.html";
 
+// 🔹 Search Filter Function
+function filterEmployees() {
+    const filter = document.getElementById("searchInput").value.toLowerCase();
+    const rows = document.querySelectorAll("#tableBody tr");
 
+    rows.forEach(row => {
+        const name = row.cells[0].textContent.toLowerCase();
+        const phone = row.cells[1].textContent.toLowerCase();
+        row.style.display = (name.includes(filter) || phone.includes(filter)) ? "" : "none";
+    });
+}
 
-    if (!token) window.location.href = "index.html";
+// 🔹 Fetch Employee List
+async function fetchEmployees() {
+    const loader = document.getElementById("loader");
+    const table = document.getElementById("employeeTable");
+    const tbody = document.getElementById("tableBody");
 
+    try {
+        const res = await fetch(`${API_BASE}/employees`, {
+            method: 'GET',
+            headers: {
+                "Authorization": token,
+                "Content-Type": "application/json"
+            }
+        });
 
+        if (res.status === 401 || res.status === 403) return logout();
 
-    // 🔹 Search Filter Function
+        const data = await res.json();
+        const employees = data.employees || [];
 
-    function filterEmployees() {
+        tbody.innerHTML = "";
+        loader.style.display = "none";
+        table.style.display = "table";
 
-        const input = document.getElementById("searchInput");
+        employees.forEach(emp => {
+            let statusClass = 'pending';
+            let statusLabel = '○ Pending';
 
-        const filter = input.value.toLowerCase();
-
-        const tbody = document.getElementById("tableBody");
-
-        const tr = tbody.getElementsByTagName("tr");
-
-
-
-        for (let i = 0; i < tr.length; i++) {
-
-            const nameCell = tr[i].getElementsByTagName("td")[0];
-
-            const phoneCell = tr[i].getElementsByTagName("td")[1];
-
-           
-
-            if (nameCell || phoneCell) {
-
-                const nameText = nameCell.textContent || nameCell.innerText;
-
-                const phoneText = phoneCell.textContent || phoneCell.innerText;
-
-               
-
-                if (nameText.toLowerCase().indexOf(filter) > -1 || phoneText.indexOf(filter) > -1) {
-
-                    tr[i].style.display = "";
-
-                } else {
-
-                    tr[i].style.display = "none";
-
-                }
-
+            if (emp.hasSignedPolicy) {
+                statusClass = emp.policyStatus === 'agreed' ? 'signed' : 'disagreed';
+                statusLabel = emp.policyStatus === 'agreed' ? '● Agreed' : '● Disagreed';
             }
 
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${emp.name}</strong></td>
+                    <td>${emp.phone}</td>
+                    <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                    <td>
+                        <button class="btn-delete" onclick="deleteEmployee('${emp._id}', this)">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        if (employees.length === 0) {
+            loader.style.display = "block";
+            loader.innerText = "No employees found.";
+            table.style.display = "none";
         }
 
+    } catch (err) {
+        loader.innerText = "Connection Error: Backend unreachable.";
     }
-
-
-
-    async function fetchEmployees() {
-
-        const loader = document.getElementById("loader");
-
-        const table = document.getElementById("employeeTable");
-
-        const tbody = document.getElementById("tableBody");
-
-
-
-        try {
-
-            const res = await fetch(`${API_BASE}/employees`, {
-
-                method: 'GET',
-
-                headers: {
-
-                    "Authorization": token,
-
-                    "Content-Type": "application/json"
-
-                }
-
-            });
-
-
-
-            if (res.status === 401 || res.status === 403) {
-
-                logout();
-
-                return;
-
-            }
-
-
-
-            const data = await res.json();
-
-            const employees = data.employees || [];
-
-
-
-            tbody.innerHTML = "";
-
-            loader.style.display = "none";
-
-            table.style.display = "table";
-
-
-
-            employees.forEach(emp => {
-
-                let statusClass = 'pending';
-
-                let statusLabel = '○ Pending';
-
-
-
-                if (emp.hasSignedPolicy) {
-
-                    if (emp.policyStatus === 'agreed') {
-
-                        statusClass = 'signed';
-
-                        statusLabel = '● Agreed';
-
-                    } else if (emp.policyStatus === 'disagreed') {
-
-                        statusClass = 'disagreed';
-
-                        statusLabel = '● Disagreed';
-
-                    } else {
-
-                        statusClass = 'signed';
-
-                        statusLabel = '● Signed';
-
-                    }
-
-                }
-
-
-
-                const row = `
-
-                    <tr>
-
-                        <td><strong>${emp.name}</strong></td>
-
-                        <td>${emp.phone}</td>
-
-                        <td>
-
-                            <span class="status-badge ${statusClass}">
-
-                                ${statusLabel}
-
-                            </span>
-
-                        </td>
-
-                        <td>
-
-                            <button class="btn-delete" onclick="deleteEmployee('${emp._id}')">Delete</button>
-
-                        </td>
-
-                    </tr>
-
-                `;
-
-                tbody.innerHTML += row;
-
-            });
-
-
-
-            if (employees.length === 0) {
-
-                loader.style.display = "block";
-
-                loader.innerText = "No employees found.";
-
-                table.style.display = "none";
-
-            }
-
-
-
-        } catch (err) {
-
-            loader.innerText = "Connection Error: Backend is unreachable.";
-
-        }
-
-    }
-
-
-
-    async function createEmployee() {
-
-        const name = document.getElementById("nameInput").value;
-
-        const phone = document.getElementById("phoneInput").value;
-
-        if (!name || !phone) return alert("Please fill all fields");
-
-
-
-        try {
-
-            const res = await fetch(`${API_BASE}/create-employee`, {
-
-                method: "POST",
-
-                headers: {
-
-                    "Content-Type": "application/json",
-
-                    "Authorization": token
-
-                },
-
-                body: JSON.stringify({ name, phone })
-
-            });
-
-
-
-            if (res.ok) {
-
-                document.getElementById("nameInput").value = "";
-
-                document.getElementById("phoneInput").value = "";
-
-                fetchEmployees();
-
-            } else {
-
-                const result = await res.json();
-
-                alert(result.message);
-
-            }
-
-        } catch (err) {
-
-            alert("System error.");
-
-        }
-
-    }
-
-
-
-    async function deleteEmployee(id) {
-
-        if (!confirm("Delete permanently?")) return;
-
-        try {
-
-            const res = await fetch(`${API_BASE}/delete-employee/${id}`, {
-
-                method: "DELETE",
-
-                headers: { "Authorization": token }
-
-            });
-
+}
+
+// 🔹 Create New Employee
+async function createEmployee() {
+    const name = document.getElementById("nameInput").value.trim();
+    const phone = document.getElementById("phoneInput").value.trim();
+    if (!name || !phone) return alert("Please fill all fields");
+
+    try {
+        const res = await fetch(`${API_BASE}/create-employee`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": token },
+            body: JSON.stringify({ name, phone })
+        });
+
+        if (res.ok) {
+            document.getElementById("nameInput").value = "";
+            document.getElementById("phoneInput").value = "";
             fetchEmployees();
-
-        } catch (err) {
-
-            alert("Could not delete.");
-
+        } else {
+            const result = await res.json();
+            alert(result.message);
         }
-
+    } catch (err) {
+        alert("System error.");
     }
+}
 
+// 🔹 Delete Employee
+async function deleteEmployee(id, btn) {
+    if (!confirm("Are you sure? This action cannot be undone.")) return;
+    
+    btn.disabled = true;
+    btn.innerText = "Deleting...";
 
-
-    function logout() {
-
-        localStorage.removeItem("adminToken");
-
-        window.location.href = "index.html";
-
+    try {
+        const res = await fetch(`${API_BASE}/delete-employee/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": token }
+        });
+        if (res.ok) fetchEmployees();
+    } catch (err) {
+        alert("Could not delete.");
+        btn.disabled = false;
+        btn.innerText = "Delete";
     }
+}
 
+// 🔹 Logout
+function logout() {
+    localStorage.removeItem("adminToken");
+    window.location.href = "index.html";
+}
 
-
-    fetchEmployees();
+// Initial Load
+fetchEmployees();
 </script>
 
 </body>
