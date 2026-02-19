@@ -38,7 +38,7 @@ router.post("/send-otp", async (req, res) => {
     }
 
     // MessageCentral API Call (V3 Send)
-    const url = `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&flowType=SMS&mobileNumber=${phone}`;
+    const url = `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&flowType=WHATSAPP&mobileNumber=${phone}`;
 
     const response = await axios.post(url, {}, {
       headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN }
