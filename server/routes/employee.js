@@ -10,7 +10,7 @@ const sanitizePhone = (phone) => {
 };
 
 // =========================
-// 🔹 SEND OTP (Fast2SMS WhatsApp POST Method)
+// 🔹 SEND OTP (Using Offer Template 13273)
 // =========================
 router.post("/send-otp", async (req, res) => {
   try {
@@ -24,7 +24,7 @@ router.post("/send-otp", async (req, res) => {
       return res.status(404).json({ message: "Employee not found in database" });
     }
 
-    // Rate Limiting Logic
+    // Rate Limiting
     const today = new Date().toDateString();
     if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
       user.otpCount = 0;
@@ -33,28 +33,28 @@ router.post("/send-otp", async (req, res) => {
       return res.status(429).json({ message: "Daily OTP limit reached" });
     }
 
-    // 1️⃣ GENERATE OTP & EXPIRY
     const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
-    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     const fullPhone = `91${cleanPhone}`;
 
-    // 2️⃣ SAVE TO DATABASE IMMEDIATELY (Crucial Fix)
-    // We save first so verificationId is NOT null, even if API fails
+    // 1️⃣ SAVE TO DATABASE IMMEDIATELY
+    // This ensures verification works even if WhatsApp has a delay
     await User.findOneAndUpdate(
       { phone: cleanPhone },
       {
         $set: {
           verificationId: generatedOtp, 
-          otpExpiry: otpExpiry, 
+          otpExpiry: new Date(Date.now() + 5 * 60 * 1000), 
           otpLastSentDate: new Date(),
         },
         $inc: { otpCount: 1 }
       }
     );
 
-    console.log(`✅ OTP ${generatedOtp} saved to DB for ${cleanPhone}. Attempting WhatsApp...`);
+    console.log(`✅ OTP ${generatedOtp} saved to DB. Sending WhatsApp...`);
 
-    // 3️⃣ TRY SENDING VIA WHATSAPP
+    // 2️⃣ SEND WHATSAPP VIA POST
+    // Template Mapping for 13273: "Buy {{1}} & get {{2}} FREE. Visit: {{3}}"
+    // Result: "Buy OTP Code & get 1234 FREE. Visit: Employee Portal"
     try {
       const response = await axios({
         method: 'post',
@@ -65,10 +65,10 @@ router.post("/send-otp", async (req, res) => {
         },
         data: {
           "route": "otp",
-          "message_id": "13274",
+          "message_id": "13273",
           "phone_number_id": "1052434897942096",
           "numbers": fullPhone,
-          "variables_values": generatedOtp 
+          "variables_values": `OTP Code,${generatedOtp},Employee Portal`
         }
       });
 
@@ -76,24 +76,24 @@ router.post("/send-otp", async (req, res) => {
         return res.json({ message: "WhatsApp OTP sent successfully" });
       } else {
         console.error("Fast2SMS Rejection:", response.data);
-        // Note: OTP is still in DB, so user can check logs to login
+        // We still return 200 because the OTP IS saved in the DB
         return res.status(200).json({ 
-          message: "OTP generated. (WhatsApp delivery failed: " + (response.data.message || "Template Error") + ")" 
+          message: "System generated OTP. (WhatsApp delivery error: " + response.data.message + ")" 
         });
       }
     } catch (apiErr) {
-      console.error("WHATSAPP API ERROR:", apiErr.response?.data || apiErr.message);
-      return res.status(200).json({ message: "OTP generated. Check server logs if WhatsApp not received." });
+      console.error("WHATSAPP GATEWAY ERROR:", apiErr.response?.data || apiErr.message);
+      return res.status(200).json({ message: "OTP saved. Check server logs if not received." });
     }
 
   } catch (err) {
-    console.error("INTERNAL SERVER ERROR:", err.message);
+    console.error("INTERNAL ERROR:", err.message);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
 // =========================
-// 🔹 VERIFY OTP (Manual DB Verification)
+// 🔹 VERIFY OTP
 // =========================
 router.post("/verify-otp", async (req, res) => {
   try {
@@ -101,8 +101,6 @@ router.post("/verify-otp", async (req, res) => {
     if (!phone || !otp) return res.status(400).json({ message: "Phone and OTP required" });
 
     const cleanPhone = sanitizePhone(phone);
-    
-    // Explicitly select hidden fields to compare with user input
     const user = await User.findOne({ phone: cleanPhone }).select("+verificationId +otpExpiry");
 
     if (!user || !user.verificationId) {
@@ -113,7 +111,6 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ message: "OTP has expired" });
     }
 
-    // Direct comparison
     if (user.verificationId === otp.toString()) {
       user.verificationId = null;
       user.otpExpiry = null;
@@ -130,7 +127,6 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP code" });
     }
   } catch (err) {
-    console.error("VERIFY ERROR:", err.message);
     res.status(500).json({ message: "Internal server error" });
   }
 });
