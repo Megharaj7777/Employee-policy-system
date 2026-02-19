@@ -121,6 +121,7 @@ function startTimer() {
     countdown = setInterval(() => {
         timeLeft--;
         secondsSpan.innerText = timeLeft;
+
         if (timeLeft <= 0) {
             clearInterval(countdown);
             btn.disabled = false;
@@ -133,7 +134,7 @@ async function sendOTP() {
     const phoneInput = document.getElementById("phone");
     let phone = phoneInput.value.replace(/\D/g, "");
 
-    if (phone.length < 10) return alert("Please enter a valid 10-digit number");
+    if (phone.length < 10) return alert("Enter valid number");
 
     savedPhone = phone;
 
@@ -145,20 +146,25 @@ async function sendOTP() {
         });
 
         const data = await res.json();
+
+        // ✅ FIXED LOGIC
         if (res.ok) {
-            alert(data.message);
+            alert("OTP Sent Successfully");
             startTimer();
         } else {
-            alert(`Error: ${data.message}`);
+            alert(data.message || "Failed to send OTP");
         }
+
     } catch (err) {
-        alert("Server unreachable. Please check your internet connection.");
+        alert("Server error");
     }
 }
 
 async function verifyOTP() {
     const otp = document.getElementById("otp").value;
-    if (!otp) return alert("Please enter the OTP");
+
+    if (!otp) return alert("Enter OTP");
+    if (!savedPhone) return alert("Request OTP first");
 
     try {
         const res = await fetch("https://employee-policy-system.onrender.com/api/employee/verify-otp", {
@@ -168,58 +174,20 @@ async function verifyOTP() {
         });
 
         const data = await res.json();
+
         if (res.ok && data.token) {
             localStorage.setItem("employeeToken", data.token);
+            alert("Login successful");
             window.location.href = "policy.html";
         } else {
             alert(data.message || "Invalid OTP");
         }
+
     } catch (err) {
-        alert("Verification failed. Please try again.");
+        alert("Verification failed");
     }
 }
 
-// 🔹 Missing Admin Functions Added Below 🔹
-
-function showAdmin() {
-    document.getElementById("adminSection").classList.remove("hidden");
-    document.getElementById("employeeSection").classList.add("hidden");
-}
-
-function showEmployee() {
-    document.getElementById("employeeSection").classList.remove("hidden");
-    document.getElementById("adminSection").classList.add("hidden");
-}
-
-async function adminLogin() {
-    const username = document.getElementById("adminUsername").value;
-    const password = document.getElementById("adminPassword").value;
-    const errorEl = document.getElementById("adminError");
-
-    if (!username || !password) {
-        errorEl.innerText = "Please enter both credentials.";
-        return;
-    }
-
-    try {
-        const res = await fetch("https://employee-policy-system.onrender.com/api/admin/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.token) {
-            localStorage.setItem("adminToken", data.token);
-            window.location.href = "admin-dashboard.html";
-        } else {
-            errorEl.innerText = data.message || "Invalid Admin credentials";
-        }
-    } catch (err) {
-        errorEl.innerText = "Connection error. Try again.";
-    }
-}
 </script>
 
 </body>
