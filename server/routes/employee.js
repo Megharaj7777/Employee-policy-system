@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const sanitizePhone = (phone) => {
   const cleaned = phone.replace(/\D/g, "");
+  // Returns 10 digits for DB lookup, but we'll add '91' for the API
   return cleaned.length > 10 ? cleaned.slice(-10) : cleaned;
 };
 
@@ -24,7 +25,7 @@ router.post("/send-otp", async (req, res) => {
       return res.status(404).json({ message: "Employee not found in database" });
     }
 
-    // Rate Limiting
+    // Rate Limiting Logic (10 per day)
     const today = new Date().toDateString();
     if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
       user.otpCount = 0;
@@ -35,12 +36,13 @@ router.post("/send-otp", async (req, res) => {
 
     const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
     
-    // 🔥 FIX: Added '91' prefix as required by most WhatsApp APIs
+    // 🔥 WABA route requires 91 prefix
     const fullPhone = `91${cleanPhone}`;
-    console.log(`Attempting to send WhatsApp OTP: ${generatedOtp} to ${fullPhone}`);
+    console.log(`Sending WhatsApp OTP: ${generatedOtp} to ${fullPhone} using Message ID: 13274`);
 
-    // Fast2SMS WhatsApp API URL
-    const fast2smsUrl = `https://www.fast2sms.com/dev/whatsapp?authorization=${process.env.FAST2SMS_KEY}&variables_values=${generatedOtp}&route=otp&numbers=${fullPhone}`;
+    // 🔥 FIX: Added 'message_id' parameter and using the correct template variable mapping
+    // Since your template is 'payment_completed', generatedOtp will fill the first {#var#}
+    const fast2smsUrl = `https://www.fast2sms.com/dev/whatsapp?authorization=${process.env.FAST2SMS_KEY}&route=otp&message_id=13274&variables_values=${generatedOtp}&numbers=${fullPhone}`;
 
     const response = await axios.get(fast2smsUrl);
 
@@ -58,20 +60,19 @@ router.post("/send-otp", async (req, res) => {
       );
       res.json({ message: "WhatsApp OTP sent successfully" });
     } else {
-      // This helps you see if it's a balance issue or template issue
-      console.error("Fast2SMS API Error Response:", response.data);
-      res.status(400).json({ message: response.data.message || "WhatsApp gateway rejected" });
+      console.error("Fast2SMS Rejection Response:", response.data);
+      res.status(400).json({ message: response.data.message || "WhatsApp gateway rejected the request" });
     }
 
   } catch (err) {
-    // 🔥 Detailed logging for Render console
+    // Check Render logs for specific API error details
     console.error("WHATSAPP SEND ERROR:", err.response?.data || err.message);
     res.status(500).json({ message: "WhatsApp gateway connection error" });
   }
 });
 
 // =========================
-// 🔹 VERIFY OTP (Remains the Same)
+// 🔹 VERIFY OTP
 // =========================
 router.post("/verify-otp", async (req, res) => {
   try {
@@ -91,6 +92,7 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     if (user.verificationId === otp.toString()) {
+      // Success: Clear OTP fields
       user.verificationId = null;
       user.otpExpiry = null;
       await user.save();
