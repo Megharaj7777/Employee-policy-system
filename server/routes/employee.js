@@ -10,7 +10,7 @@ const sanitizePhone = (phone) => {
 };
 
 // =========================
-// 🔹 SEND OTP (Fast2SMS WhatsApp Business API)
+// 🔹 SEND OTP (Fast2SMS WhatsApp POST Method)
 // =========================
 router.post("/send-otp", async (req, res) => {
   try {
@@ -24,7 +24,7 @@ router.post("/send-otp", async (req, res) => {
       return res.status(404).json({ message: "Employee not found in database" });
     }
 
-    // Rate Limiting (Prevent abuse)
+    // Rate Limiting
     const today = new Date().toDateString();
     if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
       user.otpCount = 0;
@@ -36,16 +36,26 @@ router.post("/send-otp", async (req, res) => {
     const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
     const fullPhone = `91${cleanPhone}`;
 
-    // 🚀 YOUR OFFICIAL API DETAILS
-    const messageId = "13274"; 
-    const phoneNumberId = "1052434897942096";
-
-    // Fast2SMS Official WABA URL
-    const fast2smsUrl = `https://www.fast2sms.com/dev/whatsapp?authorization=${process.env.FAST2SMS_KEY}&route=otp&message_id=${messageId}&variables_values=${generatedOtp}&numbers=${fullPhone}&phone_number_id=${phoneNumberId}`;
-
     console.log(`Sending WhatsApp OTP: ${generatedOtp} to ${fullPhone}`);
 
-    const response = await axios.get(fast2smsUrl);
+    // 🔥 SWITCHED TO POST FOR BETTER VALIDATION
+    // Note: 'variables_values' usually takes a string. 
+    // If your template has TWO variables, use: `User,${generatedOtp}`
+    const response = await axios({
+      method: 'post',
+      url: 'https://www.fast2sms.com/dev/whatsapp',
+      headers: {
+        'authorization': process.env.FAST2SMS_KEY,
+        'Content-Type': 'application/json'
+      },
+      data: {
+        "route": "otp",
+        "message_id": "13274",
+        "phone_number_id": "1052434897942096",
+        "numbers": fullPhone,
+        "variables_values": generatedOtp 
+      }
+    });
 
     if (response.data.return === true) {
       await User.findOneAndUpdate(
@@ -62,17 +72,18 @@ router.post("/send-otp", async (req, res) => {
       res.json({ message: "WhatsApp OTP sent successfully" });
     } else {
       console.error("Fast2SMS Rejection:", response.data);
-      res.status(400).json({ message: response.data.message || "WhatsApp gateway rejected" });
+      res.status(400).json({ message: response.data.message || "Template mismatch error" });
     }
 
   } catch (err) {
-    console.error("WHATSAPP SEND ERROR:", err.response?.data || err.message);
+    // This will help you see if it's an Auth error or Data error in Render
+    console.error("WHATSAPP POST ERROR:", err.response?.data || err.message);
     res.status(500).json({ message: "WhatsApp gateway connection error" });
   }
 });
 
 // =========================
-// 🔹 VERIFY OTP
+// 🔹 VERIFY OTP (Manual DB Verification)
 // =========================
 router.post("/verify-otp", async (req, res) => {
   try {
@@ -80,16 +91,20 @@ router.post("/verify-otp", async (req, res) => {
     if (!phone || !otp) return res.status(400).json({ message: "Phone and OTP required" });
 
     const cleanPhone = sanitizePhone(phone);
+    
+    // Explicitly select hidden fields to compare with user input
     const user = await User.findOne({ phone: cleanPhone }).select("+verificationId +otpExpiry");
 
     if (!user || !user.verificationId) {
       return res.status(400).json({ message: "No active session. Request new OTP." });
     }
 
+    // Check if OTP is still within the 5-minute window
     if (new Date() > user.otpExpiry) {
       return res.status(400).json({ message: "OTP has expired" });
     }
 
+    // Direct comparison: Database Secret vs. User Input
     if (user.verificationId === otp.toString()) {
       user.verificationId = null;
       user.otpExpiry = null;
