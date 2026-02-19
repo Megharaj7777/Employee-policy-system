@@ -11,11 +11,11 @@ const userSchema = new mongoose.Schema(
       index: true 
     },
 
-    // 🔹 This will store your manually generated 4-digit OTP
+    // 🔒 Stores the 4-digit WhatsApp OTP
     verificationId: { 
       type: String, 
       default: null, 
-      select: false // 🔒 Keeps it hidden from common GET requests
+      select: false 
     },
 
     otpExpiry: { 
@@ -24,11 +24,9 @@ const userSchema = new mongoose.Schema(
       select: false 
     },
 
-    // 🔹 Tracking for rate-limiting
     otpCount: { type: Number, default: 0 },
     otpLastSentDate: { type: Date, default: null },
 
-    // 🔹 Policy management
     policyStatus: { 
       type: String, 
       enum: ["pending", "agreed", "disagreed"], 
@@ -36,7 +34,7 @@ const userSchema = new mongoose.Schema(
     },
     hasSignedPolicy: { type: Boolean, default: false }
   },
-  { timestamps: true } // Adds createdAt and updatedAt automatically
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("User", userSchema);
