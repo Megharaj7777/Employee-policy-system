@@ -3,7 +3,6 @@ const router = express.Router();
 const User = require("../models/User");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
-const auth = require("../middleware/auth");
 
 const sanitizePhone = (phone) => phone.replace(/\D/g, "").slice(-10);
 
@@ -17,7 +16,9 @@ router.post("/send-otp", async (req, res) => {
 
     phone = sanitizePhone(phone);
 
-    const user = await User.findOne({ phone });
+    // 🔥 FIX
+    const user = await User.findOne({ phone }).select("+otp +otpExpiry");
+
     if (!user) {
       return res.status(404).json({ message: "Employee not found" });
     }
@@ -50,9 +51,10 @@ router.post("/send-otp", async (req, res) => {
 
     // ✅ Save verificationId
     user.otp = verificationId;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000;
+    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // FIXED
     user.otpCount += 1;
     user.otpLastSentDate = new Date();
+
     await user.save();
 
     res.json({ message: "OTP sent successfully" });
@@ -63,24 +65,30 @@ router.post("/send-otp", async (req, res) => {
   }
 });
 
+
 // =========================
 // 🔹 VERIFY OTP
 // =========================
 router.post("/verify-otp", async (req, res) => {
   try {
     let { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({ message: "Phone and OTP required" });
+    }
+
     phone = sanitizePhone(phone);
 
-    const user = await User.findOne({ phone });
+    // 🔥 MAIN FIX
+    const user = await User.findOne({ phone }).select("+otp +otpExpiry");
 
-    // 🔴 DEBUG LOG
     console.log("VERIFY USER:", user);
 
     if (!user || !user.otp) {
       return res.status(400).json({ message: "OTP not requested" });
     }
 
-    if (user.otpExpiry < Date.now()) {
+    if (user.otpExpiry < new Date()) {
       return res.status(400).json({ message: "OTP expired" });
     }
 

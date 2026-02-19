@@ -15,7 +15,8 @@ exports.sendOTP = async (req, res) => {
 
     phone = phone.replace(/\D/g, "");
 
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ phone }).select("+otp +otpExpiry");
+
     if (!user) {
       return res.status(404).json({ message: "User not found. Contact Admin." });
     }
@@ -53,11 +54,12 @@ exports.sendOTP = async (req, res) => {
       return res.status(500).json({ message: "Failed to send OTP" });
     }
 
-    // ✅ Store verificationId instead of OTP
+    // ✅ Store verificationId
     user.otp = data.data.verificationId;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000;
+    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // FIXED (Date type)
     user.otpCount += 1;
     user.otpLastSentDate = new Date();
+
     await user.save();
 
     return res.json({
@@ -69,6 +71,7 @@ exports.sendOTP = async (req, res) => {
     res.status(500).json({ message: "SMS Service Error" });
   }
 };
+
 
 // =========================
 // 🔹 VERIFY OTP
@@ -83,19 +86,20 @@ exports.verifyOTP = async (req, res) => {
 
     phone = phone.replace(/\D/g, "");
 
-    const user = await User.findOne({ phone });
+    // 🔥 MAIN FIX HERE
+    const user = await User.findOne({ phone }).select("+otp +otpExpiry");
+
     if (!user || !user.otp) {
       return res.status(400).json({ message: "OTP not requested" });
     }
 
-    if (user.otpExpiry < Date.now()) {
+    if (user.otpExpiry < new Date()) {
       return res.status(400).json({ message: "OTP expired" });
     }
 
     const customerId = process.env.MESSAGECENTRAL_CUSTOMER_ID.trim();
     const authToken = process.env.MESSAGECENTRAL_AUTH_TOKEN.trim();
 
-    // 🔥 VERIFY USING verificationId
     const verifyUrl = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.otp}&customerId=${customerId}&code=${otp}`;
 
     const response = await axios.get(verifyUrl, {
@@ -115,7 +119,7 @@ exports.verifyOTP = async (req, res) => {
     user.otpExpiry = null;
     await user.save();
 
-    // 🔐 Generate JWT
+    // 🔐 JWT
     const token = jwt.sign(
       { id: user._id, role: "employee" },
       process.env.JWT_SECRET,
