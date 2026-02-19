@@ -17,8 +17,9 @@ router.post("/send-otp", async (req, res) => {
     if (!phone) return res.status(400).json({ message: "Phone required" });
 
     phone = sanitizePhone(phone);
-    // Include otp fields explicitly
-    const user = await User.findOne({ phone }).select("+otp +otpExpiry +otpCount +otpLastSentDate");
+    
+    // Check if user exists first
+    const user = await User.findOne({ phone }).select("+otpCount +otpLastSentDate");
 
     if (!user) {
       return res.status(404).json({ message: "Employee not found" });
@@ -41,20 +42,19 @@ router.post("/send-otp", async (req, res) => {
       headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN }
     });
 
-    // CRITICAL: Check the exact structure of response.data
-    const verificationId = response.data?.data?.verificationId || response.data?.verificationId;
+    const vId = response.data?.data?.verificationId || response.data?.verificationId;
 
-    if (!verificationId) {
+    if (!vId) {
       console.error("API Response Missing ID:", response.data);
       return res.status(500).json({ message: "OTP provider failed to return ID" });
     }
 
-    // Update User using findOneAndUpdate to bypass potential model 'select: false' issues during save
+    // ✅ FIXED: Use 'verificationId' to match your User Schema
     await User.findOneAndUpdate(
       { phone },
       {
         $set: {
-          otp: verificationId, // Saving the verificationId here
+          verificationId: vId, 
           otpExpiry: new Date(Date.now() + 5 * 60 * 1000),
           otpLastSentDate: new Date(),
         },
@@ -81,25 +81,25 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     phone = sanitizePhone(phone);
-    // Force selection of otp and otpExpiry
-    const user = await User.findOne({ phone }).select("+otp +otpExpiry");
 
-    if (!user || !user.otp) {
-      return res.status(400).json({ message: "No OTP request found for this number" });
+    // ✅ FIXED: Select 'verificationId' (not otp) to match schema
+    const user = await User.findOne({ phone }).select("+verificationId +otpExpiry");
+
+    if (!user || !user.verificationId) {
+      return res.status(400).json({ message: "OTP not requested or session invalid" });
     }
 
     if (new Date() > user.otpExpiry) {
       return res.status(400).json({ message: "OTP has expired" });
     }
 
-    // MessageCentral Validation API
-    const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.otp}&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&code=${otp}`;
+    // MessageCentral Validation API - Using user.verificationId
+    const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.verificationId}&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&code=${otp}`;
 
     const response = await axios.get(url, {
       headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN }
     });
 
-    // Check for success: MessageCentral uses responseCode 200 and verificationStatus "VERIFIED"
     const isVerified = response.data?.responseCode === 200 && 
                        (response.data?.data?.verificationStatus === "VERIFIED" || response.data?.verificationStatus === "VERIFIED");
 
@@ -110,8 +110,8 @@ router.post("/verify-otp", async (req, res) => {
       });
     }
 
-    // Clear the OTP fields after successful login
-    user.otp = null;
+    // ✅ FIXED: Clear the correct field
+    user.verificationId = null;
     user.otpExpiry = null;
     await user.save();
 

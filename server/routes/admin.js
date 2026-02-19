@@ -2,13 +2,14 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 const Admin = require("../models/Admin");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
 
 // 🔹 Utility: Clean phone number
-const sanitizePhone = (phone) => phone.replace(/\D/g, "");
+const sanitizePhone = (phone) => phone.replace(/\D/g, "").slice(-10);
 
 // =========================
 // 🔹 ADMIN LOGIN
@@ -34,7 +35,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: admin._id, role: "admin" },
       process.env.JWT_SECRET,
-      { expiresIn: "2h" }
+      { expiresIn: "4h" } // Extended slightly for dashboard usability
     );
 
     res.json({
@@ -59,10 +60,8 @@ router.get("/employees", auth, async (req, res) => {
     }
 
     const { search } = req.query;
-
     let query = {};
 
-    // 🔥 SEARCH BY NAME OR PHONE
     if (search) {
       query = {
         $or: [
@@ -72,6 +71,7 @@ router.get("/employees", auth, async (req, res) => {
       };
     }
 
+    // Explicitly exclude sensitive OTP fields from the list
     const users = await User.find(query)
       .select("name phone hasSignedPolicy policyStatus createdAt")
       .sort({ createdAt: -1 });
@@ -145,6 +145,11 @@ router.delete("/delete-employee/:id", auth, async (req, res) => {
       return res.status(403).json({ message: "Access Denied" });
     }
 
+    // Check if ID is a valid MongoDB ObjectId to prevent crash
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+    }
+
     const user = await User.findByIdAndDelete(req.params.id);
 
     if (!user) {
@@ -161,7 +166,7 @@ router.delete("/delete-employee/:id", auth, async (req, res) => {
 
 
 // =========================
-// 🔹 UPDATE EMPLOYEE (NEW - BONUS 🔥)
+// 🔹 UPDATE EMPLOYEE
 // =========================
 router.put("/update-employee/:id", auth, async (req, res) => {
   try {
@@ -169,8 +174,11 @@ router.put("/update-employee/:id", auth, async (req, res) => {
       return res.status(403).json({ message: "Access Denied" });
     }
 
-    let { name, phone } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+    }
 
+    let { name, phone } = req.body;
     const updateData = {};
 
     if (name) updateData.name = name.trim();
@@ -178,8 +186,8 @@ router.put("/update-employee/:id", auth, async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      updateData,
-      { new: true }
+      { $set: updateData },
+      { new: true, runValidators: true }
     );
 
     if (!user) {
@@ -196,6 +204,5 @@ router.put("/update-employee/:id", auth, async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 });
-
 
 module.exports = router;
