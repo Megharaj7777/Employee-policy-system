@@ -13,60 +13,58 @@ const sanitizePhone = (phone) => phone.replace(/\D/g, "").slice(-10);
 router.post("/send-otp", async (req, res) => {
   try {
     let { phone } = req.body;
-    if (!phone) return res.status(400).json({ message: "Phone number required" });
+    if (!phone) return res.status(400).json({ message: "Phone required" });
 
     phone = sanitizePhone(phone);
 
     const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(404).json({ message: "Employee not found. Contact Admin." });
+      return res.status(404).json({ message: "Employee not found" });
     }
 
-    // 🔹 Daily reset
+    // Daily reset
     const today = new Date().toDateString();
-    if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
+    if (
+      user.otpLastSentDate &&
+      new Date(user.otpLastSentDate).toDateString() !== today
+    ) {
       user.otpCount = 0;
     }
 
     if (user.otpCount >= 3) {
-      return res.status(429).json({ message: "OTP limit reached (3/3). Try tomorrow." });
+      return res.status(429).json({ message: "OTP limit reached" });
     }
 
-    const customerId = process.env.MESSAGECENTRAL_CUSTOMER_ID.trim();
-    const authToken = process.env.MESSAGECENTRAL_AUTH_TOKEN.trim();
-
-    const url = `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${customerId}&flowType=SMS&mobileNumber=${phone}`;
+    const url = `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&flowType=SMS&mobileNumber=${phone}`;
 
     const response = await axios.post(url, {}, {
-      headers: {
-        authToken: authToken
-      }
+      headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN }
     });
 
     const verificationId = response.data?.data?.verificationId;
 
     if (!verificationId) {
-      console.error("INVALID RESPONSE:", response.data);
-      return res.status(500).json({ message: "Failed to send OTP" });
+      console.error("BAD RESPONSE:", response.data);
+      return res.status(500).json({ message: "OTP send failed" });
     }
 
-    // ✅ Save only verificationId (NOT OTP)
+    // ✅ Save verificationId
     user.otp = verificationId;
     user.otpExpiry = Date.now() + 5 * 60 * 1000;
     user.otpCount += 1;
     user.otpLastSentDate = new Date();
     await user.save();
 
-    res.json({ message: `OTP Sent (${user.otpCount}/3)` });
+    res.json({ message: "OTP sent successfully" });
 
-  } catch (error) {
-    console.error("SEND OTP ERROR:", error.response?.data || error.message);
-    res.status(500).json({ message: "Failed to send OTP" });
+  } catch (err) {
+    console.error("SEND ERROR:", err.response?.data || err.message);
+    res.status(500).json({ message: "SMS error" });
   }
 });
 
 // =========================
-// 🔹 VERIFY OTP (IMPORTANT FIX)
+// 🔹 VERIFY OTP
 // =========================
 router.post("/verify-otp", async (req, res) => {
   try {
@@ -74,28 +72,33 @@ router.post("/verify-otp", async (req, res) => {
     phone = sanitizePhone(phone);
 
     const user = await User.findOne({ phone });
+
+    // 🔴 DEBUG LOG
+    console.log("VERIFY USER:", user);
+
     if (!user || !user.otp) {
       return res.status(400).json({ message: "OTP not requested" });
     }
 
-    const customerId = process.env.MESSAGECENTRAL_CUSTOMER_ID.trim();
-    const authToken = process.env.MESSAGECENTRAL_AUTH_TOKEN.trim();
+    if (user.otpExpiry < Date.now()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
 
-    const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.otp}&customerId=${customerId}&code=${otp}`;
+    const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.otp}&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&code=${otp}`;
 
     const response = await axios.get(url, {
-      headers: {
-        authToken: authToken
-      }
+      headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN }
     });
+
+    console.log("VERIFY RESPONSE:", response.data);
 
     const status = response.data?.data?.verificationStatus;
 
     if (status !== "VERIFIED") {
-      return res.status(400).json({ message: "Invalid or Expired OTP" });
+      return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // ✅ Clear after success
+    // ✅ Clear OTP
     user.otp = null;
     user.otpExpiry = null;
     await user.save();
@@ -108,31 +111,9 @@ router.post("/verify-otp", async (req, res) => {
 
     res.json({ message: "Login Successful", token });
 
-  } catch (error) {
-    console.error("VERIFY ERROR:", error.response?.data || error.message);
+  } catch (err) {
+    console.error("VERIFY ERROR:", err.response?.data || err.message);
     res.status(400).json({ message: "OTP verification failed" });
-  }
-});
-
-// =========================
-// 🔹 SUBMIT POLICY
-// =========================
-router.post("/submit-policy", auth, async (req, res) => {
-  try {
-    const { status } = req.body;
-    const user = await User.findById(req.user.id);
-
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    user.hasSignedPolicy = true;
-    user.policyStatus = status;
-
-    await user.save();
-
-    res.json({ message: "Policy response recorded!" });
-
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
   }
 });
 

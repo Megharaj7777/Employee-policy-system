@@ -170,7 +170,10 @@ async function verifyOTP() {
         const res = await fetch("https://employee-policy-system.onrender.com/api/employee/verify-otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: savedPhone, otp })
+            body: JSON.stringify({
+                phone: savedPhone.slice(-10),
+                otp: otp.trim()
+            })
         });
 
         const data = await res.json();
