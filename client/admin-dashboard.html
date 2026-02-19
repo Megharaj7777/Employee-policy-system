@@ -7,7 +7,6 @@
     <style>
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
         
-        /* 🔹 Fixed/Absolute Logo Header - Always Top Left */
         .logo-header {
             position: absolute;
             top: 15px;
@@ -22,15 +21,14 @@
         }
 
         .logo-header svg {
-            width: 130px; /* Base size */
+            width: 130px;
             height: auto;
         }
 
-        /* 🔹 Navbar adjustment to prevent text overlap */
         .navbar { 
             background: linear-gradient(to right, #8f94fb, #4e54c8); 
             padding: 20px; 
-            padding-top: 80px; /* Room for logo on mobile */
+            padding-top: 80px; 
             color: white; 
             text-align: center; 
             font-size: 18px; 
@@ -42,12 +40,10 @@
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h3 { margin-top: 0; color: #333; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; font-size: 18px; }
 
-        /* 🔹 Responsive Input Group */
         .input-group { display: flex; gap: 10px; margin-top: 15px; flex-direction: column; }
         input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 16px; }
         button { padding: 12px 25px; border: none; border-radius: 8px; background: #4e54c8; color: white; cursor: pointer; font-weight: 600; transition: 0.3s; }
 
-        /* 🔹 Table Styles */
         .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 500px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
@@ -59,11 +55,10 @@
         .btn-delete { background: #feb2b2; color: #9b2c2c; width: auto; padding: 6px 12px; font-size: 12px; }
         .logout-btn { background: #4a5568; width: 100%; margin-top: 20px; }
 
-        /* 🔹 Tablet and Desktop Overrides */
         @media (min-width: 768px) {
             .logo-header { top: 20px; left: 20px; padding: 10px 15px; }
             .logo-header svg { width: 150px; }
-            .navbar { padding: 30px; font-size: 24px; text-align: right; padding-right: 40px; } /* Move text to right to balance logo */
+            .navbar { padding: 30px; font-size: 24px; text-align: right; padding-right: 40px; }
             .input-group { flex-direction: row; }
             button, .logout-btn { width: auto; }
             .container { padding: 30px; }
@@ -129,10 +124,14 @@
 const API_BASE = "https://employee-policy-system.onrender.com/api/admin";
 const token = localStorage.getItem("adminToken");
 
-// Redirect immediately if no token
-if (!token) window.location.href = "index.html";
+// 1. Authentication Check
+// Redirect to index.html (ensure this matches your login page filename)
+if (!token) {
+    console.warn("No token found. Redirecting...");
+    window.location.href = "index.html"; 
+}
 
-// 🔹 Search Filter Function
+// 2. Search Filter
 function filterEmployees() {
     const filter = document.getElementById("searchInput").value.toLowerCase();
     const rows = document.querySelectorAll("#tableBody tr");
@@ -144,7 +143,7 @@ function filterEmployees() {
     });
 }
 
-// 🔹 Fetch Employee List
+// 3. Fetch Employees with Authorization Fix
 async function fetchEmployees() {
     const loader = document.getElementById("loader");
     const table = document.getElementById("employeeTable");
@@ -154,12 +153,17 @@ async function fetchEmployees() {
         const res = await fetch(`${API_BASE}/employees`, {
             method: 'GET',
             headers: {
-                "Authorization": token,
+                // FIXED: Added 'Bearer' prefix which is standard for JWT
+                "Authorization": `Bearer ${token}`, 
                 "Content-Type": "application/json"
             }
         });
 
-        if (res.status === 401 || res.status === 403) return logout();
+        // If server says unauthorized, clear token and kick to login
+        if (res.status === 401 || res.status === 403) {
+            console.error("Session invalid. Logging out...");
+            return logout();
+        }
 
         const data = await res.json();
         const employees = data.employees || [];
@@ -196,11 +200,12 @@ async function fetchEmployees() {
         }
 
     } catch (err) {
-        loader.innerText = "Connection Error: Backend unreachable.";
+        console.error("Fetch error:", err);
+        loader.innerText = "Connection Error: Please wait while server wakes up...";
     }
 }
 
-// 🔹 Create New Employee
+// 4. Create Employee
 async function createEmployee() {
     const name = document.getElementById("nameInput").value.trim();
     const phone = document.getElementById("phoneInput").value.trim();
@@ -209,7 +214,10 @@ async function createEmployee() {
     try {
         const res = await fetch(`${API_BASE}/create-employee`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": token },
+            headers: { 
+                "Content-Type": "application/json", 
+                "Authorization": `Bearer ${token}` 
+            },
             body: JSON.stringify({ name, phone })
         });
 
@@ -219,14 +227,14 @@ async function createEmployee() {
             fetchEmployees();
         } else {
             const result = await res.json();
-            alert(result.message);
+            alert(result.message || "Error creating employee");
         }
     } catch (err) {
-        alert("System error.");
+        alert("System error. Check connection.");
     }
 }
 
-// 🔹 Delete Employee
+// 5. Delete Employee
 async function deleteEmployee(id, btn) {
     if (!confirm("Are you sure? This action cannot be undone.")) return;
     
@@ -236,7 +244,7 @@ async function deleteEmployee(id, btn) {
     try {
         const res = await fetch(`${API_BASE}/delete-employee/${id}`, {
             method: "DELETE",
-            headers: { "Authorization": token }
+            headers: { "Authorization": `Bearer ${token}` }
         });
         if (res.ok) fetchEmployees();
     } catch (err) {
@@ -246,14 +254,16 @@ async function deleteEmployee(id, btn) {
     }
 }
 
-// 🔹 Logout
+// 6. Logout
 function logout() {
     localStorage.removeItem("adminToken");
     window.location.href = "index.html";
 }
 
-// Initial Load
-fetchEmployees();
+// Initial Load only if token exists
+if (token) {
+    fetchEmployees();
+}
 </script>
 
 </body>
