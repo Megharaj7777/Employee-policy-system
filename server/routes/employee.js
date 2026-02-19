@@ -4,7 +4,16 @@ const User = require("../models/User");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 
-const sanitizePhone = (phone) => phone.replace(/\D/g, "").slice(-10);
+// ✅ FIXED PHONE FORMAT
+const sanitizePhone = (phone) => {
+  let cleaned = phone.replace(/\D/g, "");
+
+  if (cleaned.length === 10) {
+    cleaned = "91" + cleaned;
+  }
+
+  return cleaned;
+};
 
 // =========================
 // 🔹 SEND OTP
@@ -12,21 +21,17 @@ const sanitizePhone = (phone) => phone.replace(/\D/g, "").slice(-10);
 router.post("/send-otp", async (req, res) => {
   try {
     let { phone } = req.body;
-
-    if (!phone) {
-      return res.status(400).json({ message: "Phone required" });
-    }
+    if (!phone) return res.status(400).json({ message: "Phone required" });
 
     phone = sanitizePhone(phone);
 
-    // 🔥 IMPORTANT: include hidden fields
-    const user = await User.findOne({ phone }).select("+verificationId +otpExpiry");
+    const user = await User.findOne({ phone }).select("+otp +otpExpiry");
 
     if (!user) {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    // 🔹 Reset daily count
+    // Reset daily limit
     const today = new Date().toDateString();
     if (
       user.otpLastSentDate &&
@@ -36,10 +41,9 @@ router.post("/send-otp", async (req, res) => {
     }
 
     if (user.otpCount >= 3) {
-      return res.status(429).json({ message: "OTP limit reached (3/day)" });
+      return res.status(429).json({ message: "OTP limit reached" });
     }
 
-    // 🔥 CALL MESSAGE CENTRAL
     const url = `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&flowType=SMS&mobileNumber=${phone}`;
 
     const response = await axios.post(url, {}, {
@@ -48,28 +52,27 @@ router.post("/send-otp", async (req, res) => {
       }
     });
 
+    console.log("SEND RESPONSE:", response.data);
+
     const verificationId = response.data?.data?.verificationId;
 
     if (!verificationId) {
-      console.error("BAD RESPONSE:", response.data);
       return res.status(500).json({ message: "OTP send failed" });
     }
 
-    // ✅ SAVE verificationId (NOT OTP)
-    user.verificationId = verificationId;
+    // ✅ Save verificationId (NOT OTP)
+    user.otp = verificationId;
     user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
     user.otpCount += 1;
     user.otpLastSentDate = new Date();
 
     await user.save();
 
-    res.json({
-      message: `OTP sent successfully (${user.otpCount}/3)`
-    });
+    res.json({ message: "OTP sent successfully" });
 
   } catch (err) {
     console.error("SEND ERROR:", err.response?.data || err.message);
-    res.status(500).json({ message: "SMS service error" });
+    res.status(500).json({ message: "SMS error" });
   }
 });
 
@@ -87,10 +90,11 @@ router.post("/verify-otp", async (req, res) => {
 
     phone = sanitizePhone(phone);
 
-    // 🔥 IMPORTANT: include hidden fields
-    const user = await User.findOne({ phone }).select("+verificationId +otpExpiry");
+    const user = await User.findOne({ phone }).select("+otp +otpExpiry");
 
-    if (!user || !user.verificationId) {
+    console.log("VERIFY INPUT:", { phone, otp, verificationId: user?.otp });
+
+    if (!user || !user.otp) {
       return res.status(400).json({ message: "OTP not requested" });
     }
 
@@ -98,8 +102,7 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-    // 🔥 VERIFY WITH MESSAGE CENTRAL
-    const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.verificationId}&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&code=${otp}`;
+    const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.otp}&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&code=${otp}`;
 
     const response = await axios.get(url, {
       headers: {
@@ -107,18 +110,24 @@ router.post("/verify-otp", async (req, res) => {
       }
     });
 
-    const status = response.data?.data?.verificationStatus;
+    console.log("VERIFY RESPONSE:", response.data);
 
-    if (status !== "VERIFIED") {
-      return res.status(400).json({ message: "Invalid OTP" });
+    // ✅ FINAL FIX
+    if (
+      response.data.responseCode !== 200 ||
+      response.data.data?.verificationStatus !== "VERIFIED"
+    ) {
+      return res.status(400).json({
+        message: "Invalid OTP",
+        debug: response.data
+      });
     }
 
-    // ✅ CLEAR verificationId AFTER SUCCESS
-    user.verificationId = null;
+    // ✅ Clear OTP
+    user.otp = null;
     user.otpExpiry = null;
     await user.save();
 
-    // 🔐 JWT TOKEN
     const token = jwt.sign(
       { id: user._id, role: "employee" },
       process.env.JWT_SECRET,
