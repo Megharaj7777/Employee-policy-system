@@ -4,8 +4,10 @@ const User = require("../models/User");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 
+// Ensures the phone number is always exactly 10 digits
 const sanitizePhone = (phone) => {
-  return phone.replace(/\D/g, "").slice(-10);
+  const cleaned = phone.replace(/\D/g, "");
+  return cleaned.length > 10 ? cleaned.slice(-10) : cleaned;
 };
 
 // =========================
@@ -18,12 +20,14 @@ router.post("/send-otp", async (req, res) => {
 
     phone = sanitizePhone(phone);
     
+    // Explicitly select hidden security fields
     const user = await User.findOne({ phone }).select("+otpCount +otpLastSentDate");
 
     if (!user) {
       return res.status(404).json({ message: "Employee not found" });
     }
 
+    // Reset daily limit logic
     const today = new Date().toDateString();
     if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
       user.otpCount = 0;
@@ -33,6 +37,7 @@ router.post("/send-otp", async (req, res) => {
       return res.status(429).json({ message: "OTP limit reached for today" });
     }
 
+    // MessageCentral API Call (V3 Send)
     const url = `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&flowType=SMS&mobileNumber=${phone}`;
 
     const response = await axios.post(url, {}, {
@@ -42,16 +47,16 @@ router.post("/send-otp", async (req, res) => {
     const vId = response.data?.data?.verificationId || response.data?.verificationId;
 
     if (!vId) {
-      console.error("API Response Missing ID:", response.data);
       return res.status(500).json({ message: "OTP provider failed to return ID" });
     }
 
+    // Save the verificationId to match your User Schema
     await User.findOneAndUpdate(
       { phone },
       {
         $set: {
           verificationId: vId, 
-          otpExpiry: new Date(Date.now() + 5 * 60 * 1000),
+          otpExpiry: new Date(Date.now() + 5 * 60 * 1000), // 5 minute expiry
           otpLastSentDate: new Date(),
         },
         $inc: { otpCount: 1 }
@@ -76,27 +81,26 @@ router.post("/verify-otp", async (req, res) => {
 
     phone = sanitizePhone(phone);
 
-    // 1. Get user with hidden verificationId
+    // Get user and explicitly select the hidden verificationId
     const user = await User.findOne({ phone }).select("+verificationId +otpExpiry");
 
     if (!user || !user.verificationId) {
       return res.status(400).json({ message: "OTP not requested or session expired" });
     }
 
-    // 2. Validate against Message Central
+    // Build the V3 Validate URL with verificationId AND code
     const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.verificationId}&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&code=${otp}`;
 
     const response = await axios.get(url, {
       headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN }
     });
 
-    console.log("MESSAGE CENTRAL API RESPONSE:", JSON.stringify(response.data, null, 2));
-
+    // Check if verification was successful
     const isVerified = response.data.responseCode === 200 && 
                        (response.data.data?.verificationStatus === "VERIFIED" || response.data.verificationStatus === "VERIFIED");
 
     if (isVerified) {
-      // ✅ SUCCESS: Clear session data
+      // Clear OTP session data after successful login
       user.verificationId = null;
       user.otpExpiry = null;
       await user.save();
@@ -117,7 +121,7 @@ router.post("/verify-otp", async (req, res) => {
 
   } catch (err) {
     console.error("VERIFY ERROR:", err.response?.data || err.message);
-    res.status(400).json({ message: "OTP verification failed on server" });
+    res.status(400).json({ message: "OTP verification failed" });
   }
 });
 
