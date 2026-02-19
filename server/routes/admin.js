@@ -9,7 +9,10 @@ const User = require("../models/User");
 const auth = require("../middleware/auth");
 
 // 🔹 Utility: Clean phone number
-const sanitizePhone = (phone) => phone.replace(/\D/g, "").slice(-10);
+const sanitizePhone = (phone) => {
+  const cleaned = phone.replace(/\D/g, ""); 
+  return cleaned.slice(-10); // Always take the last 10 digits to match employee.js
+};
 
 // =========================
 // 🔹 ADMIN LOGIN
