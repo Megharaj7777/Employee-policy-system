@@ -237,7 +237,7 @@ async function adminLogin() {
         if (res.ok && data.token) {
             localStorage.setItem("adminToken", data.token);
             alert("Admin login successful");
-            window.location.href = "admin.html"; // create this page
+            window.location.href = "admin-dashboard.html"; // create this page
         } else {
             errorEl.innerText = data.message || "Invalid credentials";
         }
