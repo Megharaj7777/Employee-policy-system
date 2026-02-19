@@ -11,7 +11,7 @@ const sanitizePhone = (phone) => {
 };
 
 // =========================
-// 🔹 SEND OTP
+// 🔹 SEND OTP (Fast2SMS)
 // =========================
 router.post("/send-otp", async (req, res) => {
   try {
@@ -20,59 +20,56 @@ router.post("/send-otp", async (req, res) => {
 
     phone = sanitizePhone(phone);
     
-    // Explicitly select hidden security fields
     const user = await User.findOne({ phone }).select("+otpCount +otpLastSentDate");
-
     if (!user) {
-      return res.status(404).json({ message: "Employee not found" });
+      return res.status(404).json({ message: "Employee not found in database" });
     }
 
-    // Reset daily limit logic
+    // Daily Limit Check
     const today = new Date().toDateString();
     if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
       user.otpCount = 0;
     }
-
-    if (user.otpCount >= 3) {
-      return res.status(429).json({ message: "OTP limit reached for today" });
+    if (user.otpCount >= 10) { // Increased limit for testing
+      return res.status(429).json({ message: "Daily OTP limit reached" });
     }
 
-    // MessageCentral API Call (V3 Send)
-    const url = `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&flowType=WHATSAPP&mobileNumber=${phone}`;
+    // 1. Generate a random 4-digit OTP
+    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
 
-    const response = await axios.post(url, {}, {
-      headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN }
-    });
+    // 2. Call Fast2SMS API (OTP Route)
+    // Documentation: https://www.fast2sms.com/dev/bulkV2
+    const fast2smsUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS_KEY}&variables_values=${generatedOtp}&route=otp&numbers=${phone}`;
 
-    const vId = response.data?.data?.verificationId || response.data?.verificationId;
+    const response = await axios.get(fast2smsUrl);
 
-    if (!vId) {
-      return res.status(500).json({ message: "OTP provider failed to return ID" });
+    if (response.data.return === true) {
+      // 3. Save generated OTP to YOUR database
+      await User.findOneAndUpdate(
+        { phone },
+        {
+          $set: {
+            verificationId: generatedOtp, // We use this field to store the actual OTP now
+            otpExpiry: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
+            otpLastSentDate: new Date(),
+          },
+          $inc: { otpCount: 1 }
+        }
+      );
+      res.json({ message: "OTP sent successfully via Fast2SMS" });
+    } else {
+      console.error("Fast2SMS Error:", response.data);
+      res.status(500).json({ message: "Failed to send SMS through Fast2SMS" });
     }
-
-    // Save the verificationId to match your User Schema
-    await User.findOneAndUpdate(
-      { phone },
-      {
-        $set: {
-          verificationId: vId, 
-          otpExpiry: new Date(Date.now() + 5 * 60 * 1000), // 5 minute expiry
-          otpLastSentDate: new Date(),
-        },
-        $inc: { otpCount: 1 }
-      }
-    );
-
-    res.json({ message: "OTP sent successfully" });
 
   } catch (err) {
-    console.error("SEND ERROR:", err.response?.data || err.message);
-    res.status(500).json({ message: "SMS gateway error" });
+    console.error("SEND ERROR:", err.message);
+    res.status(500).json({ message: "SMS gateway connection error" });
   }
 });
 
 // =========================
-// 🔹 VERIFY OTP
+// 🔹 VERIFY OTP (Manual DB Check)
 // =========================
 router.post("/verify-otp", async (req, res) => {
   try {
@@ -81,30 +78,24 @@ router.post("/verify-otp", async (req, res) => {
 
     phone = sanitizePhone(phone);
 
-    // Get user with hidden fields
+    // Get user and check our stored OTP (verificationId)
     const user = await User.findOne({ phone }).select("+verificationId +otpExpiry");
 
     if (!user || !user.verificationId) {
-      return res.status(400).json({ message: "No active OTP session found. Please request a new one." });
+      return res.status(400).json({ message: "No active OTP session. Please request a new one." });
     }
 
-    // Build the URL for V3 Validate
-    const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.verificationId}&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&code=${otp}`;
+    // Check if OTP is expired
+    if (new Date() > user.otpExpiry) {
+      return res.status(400).json({ message: "OTP has expired" });
+    }
 
-    const response = await axios.get(url, {
-      headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN }
-    });
-
-    // 🔹 LOG THE ACTUAL PROVIDER RESPONSE
-    console.log("Message Central Response:", JSON.stringify(response.data));
-
-    // Message Central V3 usually returns status in responseCode or data.verificationStatus
-    const status = response.data?.data?.verificationStatus || response.data?.verificationStatus;
-    const isVerified = response.data.responseCode === 200 && status === "VERIFIED";
-
-    if (isVerified) {
-      // Success: Reset fields
-      await User.findOneAndUpdate({ phone }, { $set: { verificationId: null, otpExpiry: null } });
+    // Compare provided OTP with stored OTP
+    if (user.verificationId === otp.toString()) {
+      // Success: Clear OTP data
+      user.verificationId = null;
+      user.otpExpiry = null;
+      await user.save();
 
       const token = jwt.sign(
         { id: user._id, role: "employee" },
@@ -114,19 +105,13 @@ router.post("/verify-otp", async (req, res) => {
 
       return res.json({ message: "Login Successful", token });
     } else {
-      // Specific error reporting
-      return res.status(400).json({ 
-        message: "Invalid OTP", 
-        reason: status || "FAILED" 
-      });
+      return res.status(400).json({ message: "Invalid OTP code" });
     }
 
   } catch (err) {
-    // 🔹 THIS LOGS THE REAL CAUSE IN RENDER
-    console.error("VERIFY ERROR DATA:", err.response?.data || err.message);
-    
-    const errorMsg = err.response?.data?.message || "OTP verification failed";
-    res.status(400).json({ message: errorMsg });
+    console.error("VERIFY ERROR:", err.message);
+    res.status(500).json({ message: "Internal server error during verification" });
   }
 });
+
 module.exports = router;
