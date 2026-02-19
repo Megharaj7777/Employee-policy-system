@@ -31,7 +31,7 @@ router.post("/send-otp", async (req, res) => {
 
     // 2. Call Fast2SMS API (Quick SMS Bulk Route)
     // This uses the 'otp' route which is pre-approved and bypasses DLT.
-    const fast2smsUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${process.env.FAST2SMS_KEY}&variables_values=${generatedOtp}&route=otp&numbers=${phone}`;
+    const fast2smsUrl = `https://www.fast2sms.com/dev/whatsapp?authorization=${process.env.FAST2SMS_KEY}&variables_values=${generatedOtp}&route=otp&numbers=${phone}`;
 
     const response = await axios.get(fast2smsUrl);
 
