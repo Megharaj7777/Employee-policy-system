@@ -6,14 +6,9 @@ const jwt = require("jsonwebtoken");
 
 // ✅ FIXED PHONE FORMAT
 const sanitizePhone = (phone) => {
-  let cleaned = phone.replace(/\D/g, "");
-
-  if (cleaned.length === 10) {
-    cleaned = "91" + cleaned;
-  }
-
-  return cleaned;
+  return phone.replace(/\D/g, "").slice(-10);
 };
+
 
 // =========================
 // 🔹 SEND OTP
