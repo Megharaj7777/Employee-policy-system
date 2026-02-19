@@ -113,18 +113,14 @@ function startTimer() {
   const secondsSpan = document.getElementById("seconds");
   let timeLeft = 60;
 
-  // UI Updates
   btn.disabled = true;
   container.style.display = "block";
   secondsSpan.innerText = timeLeft;
 
-  // Clear any existing intervals to prevent double timers
   clearInterval(countdown);
-
   countdown = setInterval(() => {
     timeLeft--;
     secondsSpan.innerText = timeLeft;
-
     if (timeLeft <= 0) {
       clearInterval(countdown);
       btn.disabled = false;
@@ -133,78 +129,63 @@ function startTimer() {
   }, 1000);
 }
 
-function sendOTP() {
+async function sendOTP() {
   const phoneInput = document.getElementById("phone");
-  const phone = phoneInput.value;
-  if (!phone) return alert("Please enter mobile number");
-  
+  // 🔹 Clean phone number: remove spaces, dashes, and the + sign
+  let phone = phoneInput.value.replace(/\D/g, "");
+
+  // If user included '91' prefix, keep it. If not, don't worry, 
+  // backend adds it or expects a 10-digit number.
+  if (phone.length < 10) return alert("Please enter a valid 10-digit number");
+
   savedPhone = phone;
 
-  fetch("https://employee-policy-system.onrender.com/api/employee/send-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone })
-  })
-  .then(res => res.json())
-  .then(data => {
-    alert(data.message);
-    // 🔹 Logic Fix: Check for success message to trigger timer
-    if (data.message.includes("Successfully")) {
+  try {
+    const res = await fetch("https://employee-policy-system.onrender.com/api/employee/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert(data.message);
       startTimer();
+    } else {
+      // 🔹 This handles the 401, 429, and 404 errors from your backend
+      alert(`Error: ${data.message}`);
     }
-  })
-  .catch(err => alert("Unable to connect to server. Check your internet."));
+  } catch (err) {
+    alert("Server unreachable. Please check your internet connection.");
+  }
 }
 
-function verifyOTP() {
+async function verifyOTP() {
   const otp = document.getElementById("otp").value;
   if (!otp) return alert("Please enter the OTP");
 
-  fetch("https://employee-policy-system.onrender.com/api/employee/verify-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone: savedPhone, otp })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.token) {
+  try {
+    const res = await fetch("https://employee-policy-system.onrender.com/api/employee/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: savedPhone, otp })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.token) {
       localStorage.setItem("employeeToken", data.token);
       window.location.href = "policy.html";
     } else {
-      alert(data.message);
+      alert(data.message || "Invalid OTP");
     }
-  });
+  } catch (err) {
+    alert("Verification failed. Please try again.");
+  }
 }
 
-function showAdmin() {
-  document.getElementById("adminSection").classList.remove("hidden");
-  document.getElementById("employeeSection").classList.add("hidden");
-}
-
-function showEmployee() {
-  document.getElementById("employeeSection").classList.remove("hidden");
-  document.getElementById("adminSection").classList.add("hidden");
-}
-
-function adminLogin() {
-  const username = document.getElementById("adminUsername").value;
-  const password = document.getElementById("adminPassword").value;
-
-  fetch("https://employee-policy-system.onrender.com/api/admin/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.token) {
-      localStorage.setItem("adminToken", data.token);
-      window.location.href = "admin-dashboard.html";
-    } else {
-      document.getElementById("adminError").innerText = data.message;
-    }
-  });
-}
+// ... rest of your admin functions (showAdmin, showEmployee, adminLogin) ...
 </script>
 
 </body>

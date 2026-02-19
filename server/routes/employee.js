@@ -35,11 +35,14 @@ router.post("/send-otp", async (req, res) => {
 
     // 🔹 External API Call to MessageCentral
     try {
+      // Logic: Some MessageCentral V3 accounts require the customerId WITHOUT the 'C-' prefix in the body
+      const bodyCustomerId = process.env.MESSAGECENTRAL_CUSTOMER_ID.replace("C-", "");
+
       await axios.post(
         "https://cpaas.messagecentral.com/verification/v3/send",
         {
           countryCode: "91",
-          customerId: process.env.MESSAGECENTRAL_CUSTOMER_ID,
+          customerId: bodyCustomerId, 
           flowType: "SMS",
           mobileNumber: phone,
           otpLength: 6,
@@ -48,14 +51,14 @@ router.post("/send-otp", async (req, res) => {
         },
         {
           headers: { 
-            "authToken": process.env.MESSAGECENTRAL_AUTH_TOKEN,
+            "authToken": process.env.MESSAGECENTRAL_AUTH_TOKEN.trim(),
             "Content-Type": "application/json"
           },
           timeout: 5000
         }
       );
 
-      // ✅ SUCCESS: Now update the database
+      // ✅ SUCCESS: SMS accepted by gateway, now update database
       user.otp = otp;
       user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 mins
       user.otpCount += 1;
@@ -65,12 +68,12 @@ router.post("/send-otp", async (req, res) => {
       res.json({ message: `OTP Sent Successfully (${user.otpCount}/3)` });
 
     } catch (apiErr) {
-      // Catch specific unauthorized error (401)
-      console.error("SMS PROVIDER ERROR:", apiErr.response?.data || apiErr.message);
+      // Detailed logging for Render logs
+      console.error("SMS GATEWAY ERROR:", apiErr.response?.data || apiErr.message);
       
       const status = apiErr.response?.status === 401 ? 401 : 502;
       return res.status(status).json({ 
-        message: "SMS Gateway error. Please check credentials or try later.",
+        message: "SMS Gateway error. Please check credentials or DLT template.",
         error: apiErr.response?.data 
       });
     }
@@ -96,12 +99,11 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ message: "OTP has expired" });
     }
 
-    // Clear OTP data after successful verification
+    // Clear OTP data after success
     user.otp = null;
     user.otpExpiry = null;
     await user.save();
 
-    // Generate JWT for the employee
     const token = jwt.sign(
       { id: user._id, role: "employee" },
       process.env.JWT_SECRET,
@@ -115,10 +117,10 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-// 🔹 SUBMIT POLICY
+// 🔹 SUBMIT POLICY (Requires 'auth' middleware)
 router.post("/submit-policy", auth, async (req, res) => {
   try {
-    const { status } = req.body; // Expecting "agreed" or "disagreed"
+    const { status } = req.body; 
     const user = await User.findById(req.user.id);
 
     if (!user) return res.status(404).json({ message: "User not found" });

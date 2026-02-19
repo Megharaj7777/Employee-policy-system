@@ -4,26 +4,29 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, "Name is required"],
       trim: true
     },
 
     phone: {
       type: String,
-      required: true,
+      required: [true, "Phone number is required"],
       unique: true,
-      trim: true
+      trim: true,
+      index: true // Ensures fast lookups for login
     },
 
-    // 🔹 OTP SYSTEM
+    // 🔹 OTP SYSTEM (Security hardened)
     otp: {
       type: String,
-      default: null
+      default: null,
+      select: false // 🔒 OTP won't be returned in standard queries
     },
 
     otpExpiry: {
-      type: Number,
-      default: null
+      type: Date, // Changed to Date for better Mongoose compatibility
+      default: null,
+      select: false // 🔒 Expiry won't be returned in standard queries
     },
 
     otpCount: {
@@ -49,8 +52,16 @@ const userSchema = new mongoose.Schema(
     }
   },
   {
-    timestamps: true
+    timestamps: true // Automatically creates createdAt and updatedAt fields
   }
 );
+
+// Optional: Transform the JSON output to clean up the object for the frontend
+userSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    delete ret.__v;
+    return ret;
+  }
+});
 
 module.exports = mongoose.model("User", userSchema);
