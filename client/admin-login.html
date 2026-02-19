@@ -49,7 +49,7 @@
             if (res.ok && data.token) {
                 // 2. Save token and redirect to admin.html
                 localStorage.setItem("adminToken", data.token);
-                window.location.href = "admin.html";
+                window.location.href = "admin-dashboard.html";
             } else {
                 errorEl.innerText = data.message || "Invalid credentials";
             }
