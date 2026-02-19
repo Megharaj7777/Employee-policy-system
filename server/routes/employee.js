@@ -24,7 +24,7 @@ router.post("/send-otp", async (req, res) => {
       return res.status(404).json({ message: "Employee not found in database" });
     }
 
-    // Rate Limiting
+    // Rate Limiting Logic
     const today = new Date().toDateString();
     if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
       user.otpCount = 0;
@@ -33,52 +33,62 @@ router.post("/send-otp", async (req, res) => {
       return res.status(429).json({ message: "Daily OTP limit reached" });
     }
 
+    // 1️⃣ GENERATE OTP & EXPIRY
     const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     const fullPhone = `91${cleanPhone}`;
 
-    console.log(`Sending WhatsApp OTP: ${generatedOtp} to ${fullPhone}`);
-
-    // 🔥 SWITCHED TO POST FOR BETTER VALIDATION
-    // Note: 'variables_values' usually takes a string. 
-    // If your template has TWO variables, use: `User,${generatedOtp}`
-    const response = await axios({
-      method: 'post',
-      url: 'https://www.fast2sms.com/dev/whatsapp',
-      headers: {
-        'authorization': process.env.FAST2SMS_KEY,
-        'Content-Type': 'application/json'
-      },
-      data: {
-        "route": "otp",
-        "message_id": "13274",
-        "phone_number_id": "1052434897942096",
-        "numbers": fullPhone,
-        "variables_values": generatedOtp 
+    // 2️⃣ SAVE TO DATABASE IMMEDIATELY (Crucial Fix)
+    // We save first so verificationId is NOT null, even if API fails
+    await User.findOneAndUpdate(
+      { phone: cleanPhone },
+      {
+        $set: {
+          verificationId: generatedOtp, 
+          otpExpiry: otpExpiry, 
+          otpLastSentDate: new Date(),
+        },
+        $inc: { otpCount: 1 }
       }
-    });
+    );
 
-    if (response.data.return === true) {
-      await User.findOneAndUpdate(
-        { phone: cleanPhone },
-        {
-          $set: {
-            verificationId: generatedOtp, 
-            otpExpiry: new Date(Date.now() + 5 * 60 * 1000), 
-            otpLastSentDate: new Date(),
-          },
-          $inc: { otpCount: 1 }
+    console.log(`✅ OTP ${generatedOtp} saved to DB for ${cleanPhone}. Attempting WhatsApp...`);
+
+    // 3️⃣ TRY SENDING VIA WHATSAPP
+    try {
+      const response = await axios({
+        method: 'post',
+        url: 'https://www.fast2sms.com/dev/whatsapp',
+        headers: {
+          'authorization': process.env.FAST2SMS_KEY,
+          'Content-Type': 'application/json'
+        },
+        data: {
+          "route": "otp",
+          "message_id": "13274",
+          "phone_number_id": "1052434897942096",
+          "numbers": fullPhone,
+          "variables_values": generatedOtp 
         }
-      );
-      res.json({ message: "WhatsApp OTP sent successfully" });
-    } else {
-      console.error("Fast2SMS Rejection:", response.data);
-      res.status(400).json({ message: response.data.message || "Template mismatch error" });
+      });
+
+      if (response.data.return === true) {
+        return res.json({ message: "WhatsApp OTP sent successfully" });
+      } else {
+        console.error("Fast2SMS Rejection:", response.data);
+        // Note: OTP is still in DB, so user can check logs to login
+        return res.status(200).json({ 
+          message: "OTP generated. (WhatsApp delivery failed: " + (response.data.message || "Template Error") + ")" 
+        });
+      }
+    } catch (apiErr) {
+      console.error("WHATSAPP API ERROR:", apiErr.response?.data || apiErr.message);
+      return res.status(200).json({ message: "OTP generated. Check server logs if WhatsApp not received." });
     }
 
   } catch (err) {
-    // This will help you see if it's an Auth error or Data error in Render
-    console.error("WHATSAPP POST ERROR:", err.response?.data || err.message);
-    res.status(500).json({ message: "WhatsApp gateway connection error" });
+    console.error("INTERNAL SERVER ERROR:", err.message);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -99,12 +109,11 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ message: "No active session. Request new OTP." });
     }
 
-    // Check if OTP is still within the 5-minute window
     if (new Date() > user.otpExpiry) {
       return res.status(400).json({ message: "OTP has expired" });
     }
 
-    // Direct comparison: Database Secret vs. User Input
+    // Direct comparison
     if (user.verificationId === otp.toString()) {
       user.verificationId = null;
       user.otpExpiry = null;
