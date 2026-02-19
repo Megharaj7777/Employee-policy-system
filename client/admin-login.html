@@ -1,80 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Login | Policy System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
-    h2 { color: #022d5b; margin-bottom: 25px; }
-    input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-    button { width: 100%; padding: 12px; background: #b71530; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-    button:hover { background: #961228; }
-    button:disabled { background: #ccc; }
-    #error { color: #d9534f; font-size: 14px; margin-top: 15px; min-height: 20px; }
-    
-    /* Your existing Logo Styles */
-    .logo-header { position: absolute; top: 20px; left: 20px; background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .logo-header svg { width: 140px; height: auto; }
-    @media (max-width: 600px) { .logo-header { top: 10px; left: 10px; } .logo-header svg { width: 110px; } }
-  </style>
+    <title>Admin Login | Policy System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        h2 { color: #022d5b; margin-bottom: 25px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #b71530; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #961228; }
+        #error { color: #d9534f; font-size: 14px; margin-top: 15px; }
+    </style>
 </head>
 <body>
 
-<div class="logo-header">
-  </div>
-
 <div class="login-card">
-  <h2>Admin Portal</h2>
-  <input type="text" id="username" placeholder="Username">
-  <input type="password" id="password" placeholder="Password">
-  <button id="loginBtn" onclick="adminLogin()">Secure Login</button>
-  <p id="error"></p>
+    <h2>Admin Portal</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn" onclick="adminLogin()">Secure Login</button>
+    <p id="error"></p>
 </div>
 
 <script>
-  // Redirect if already logged in
-  if (localStorage.getItem("adminToken")) {
-    window.location.href = "admin-dashboard.html";
-  }
-
-  async function adminLogin() {
-    const userField = document.getElementById("username");
-    const passField = document.getElementById("password");
-    const btn = document.getElementById("loginBtn");
-    const errorEl = document.getElementById("error");
-
-    // UI Feedback
-    errorEl.innerText = "";
-    btn.disabled = true;
-    btn.innerText = "Authenticating...";
-
-    try {
-      const res = await fetch("https://employee-policy-system.onrender.com/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          username: userField.value, 
-          password: passField.value 
-        })
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.token) {
-        localStorage.setItem("adminToken", data.token);
-        window.location.href = "admin-dashboard.html";
-      } else {
-        errorEl.innerText = data.message || "Invalid credentials";
-        btn.disabled = false;
-        btn.innerText = "Secure Login";
-      }
-    } catch (err) {
-      errorEl.innerText = "Server error. Please try again later.";
-      btn.disabled = false;
-      btn.innerText = "Secure Login";
+    // 1. Redirect if already logged in
+    if (localStorage.getItem("adminToken")) {
+        window.location.href = "admin.html";
     }
-  }
+
+    async function adminLogin() {
+        const userField = document.getElementById("username");
+        const passField = document.getElementById("password");
+        const errorEl = document.getElementById("error");
+
+        try {
+            const res = await fetch("https://employee-policy-system.onrender.com/api/admin/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    username: userField.value, 
+                    password: passField.value 
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.token) {
+                // 2. Save token and redirect to admin.html
+                localStorage.setItem("adminToken", data.token);
+                window.location.href = "admin.html";
+            } else {
+                errorEl.innerText = data.message || "Invalid credentials";
+            }
+        } catch (err) {
+            errorEl.innerText = "Server error. Check your Render connection.";
+        }
+    }
 </script>
 </body>
 </html>
