@@ -17,11 +17,11 @@ const userSchema = new mongoose.Schema(
     },
 
     // 🔹 OTP SYSTEM (Security hardened)
-    otp: {
-      type: String,
-      default: null,
-      select: false // 🔒 OTP won't be returned in standard queries
-    },
+verificationId: {
+  type: String,
+  default: null,
+  select: false
+},
 
     otpExpiry: {
       type: Date, // Changed to Date for better Mongoose compatibility
