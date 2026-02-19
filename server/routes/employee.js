@@ -47,7 +47,8 @@ router.post("/send-otp", async (req, res) => {
       }
     });
 
-    console.log("SEND RESPONSE:", response.data);
+ console.log("FULL SEND RESPONSE:", JSON.stringify(response.data, null, 2));
+
 
     const verificationId = response.data?.data?.verificationId;
 
