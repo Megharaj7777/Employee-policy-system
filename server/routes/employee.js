@@ -81,29 +81,30 @@ router.post("/verify-otp", async (req, res) => {
 
     phone = sanitizePhone(phone);
 
-    // Get user and explicitly select the hidden verificationId
+    // Get user with hidden fields
     const user = await User.findOne({ phone }).select("+verificationId +otpExpiry");
 
     if (!user || !user.verificationId) {
-      return res.status(400).json({ message: "OTP not requested or session expired" });
+      return res.status(400).json({ message: "No active OTP session found. Please request a new one." });
     }
 
-    // Build the V3 Validate URL with verificationId AND code
+    // Build the URL for V3 Validate
     const url = `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${phone}&verificationId=${user.verificationId}&customerId=${process.env.MESSAGECENTRAL_CUSTOMER_ID}&code=${otp}`;
 
     const response = await axios.get(url, {
       headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN }
     });
 
-    // Check if verification was successful
-    const isVerified = response.data.responseCode === 200 && 
-                       (response.data.data?.verificationStatus === "VERIFIED" || response.data.verificationStatus === "VERIFIED");
+    // 🔹 LOG THE ACTUAL PROVIDER RESPONSE
+    console.log("Message Central Response:", JSON.stringify(response.data));
+
+    // Message Central V3 usually returns status in responseCode or data.verificationStatus
+    const status = response.data?.data?.verificationStatus || response.data?.verificationStatus;
+    const isVerified = response.data.responseCode === 200 && status === "VERIFIED";
 
     if (isVerified) {
-      // Clear OTP session data after successful login
-      user.verificationId = null;
-      user.otpExpiry = null;
-      await user.save();
+      // Success: Reset fields
+      await User.findOneAndUpdate({ phone }, { $set: { verificationId: null, otpExpiry: null } });
 
       const token = jwt.sign(
         { id: user._id, role: "employee" },
@@ -113,16 +114,19 @@ router.post("/verify-otp", async (req, res) => {
 
       return res.json({ message: "Login Successful", token });
     } else {
+      // Specific error reporting
       return res.status(400).json({ 
         message: "Invalid OTP", 
-        error_details: response.data.data?.verificationStatus || "FAILED" 
+        reason: status || "FAILED" 
       });
     }
 
   } catch (err) {
-    console.error("VERIFY ERROR:", err.response?.data || err.message);
-    res.status(400).json({ message: "OTP verification failed" });
+    // 🔹 THIS LOGS THE REAL CAUSE IN RENDER
+    console.error("VERIFY ERROR DATA:", err.response?.data || err.message);
+    
+    const errorMsg = err.response?.data?.message || "OTP verification failed";
+    res.status(400).json({ message: errorMsg });
   }
 });
-
 module.exports = router;
