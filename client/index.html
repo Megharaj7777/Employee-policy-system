@@ -108,84 +108,118 @@ let savedPhone = "";
 let countdown;
 
 function startTimer() {
-  const btn = document.getElementById("otpBtn");
-  const container = document.getElementById("timerContainer");
-  const secondsSpan = document.getElementById("seconds");
-  let timeLeft = 60;
+    const btn = document.getElementById("otpBtn");
+    const container = document.getElementById("timerContainer");
+    const secondsSpan = document.getElementById("seconds");
+    let timeLeft = 60;
 
-  btn.disabled = true;
-  container.style.display = "block";
-  secondsSpan.innerText = timeLeft;
-
-  clearInterval(countdown);
-  countdown = setInterval(() => {
-    timeLeft--;
+    btn.disabled = true;
+    container.style.display = "block";
     secondsSpan.innerText = timeLeft;
-    if (timeLeft <= 0) {
-      clearInterval(countdown);
-      btn.disabled = false;
-      container.style.display = "none";
-    }
-  }, 1000);
+
+    clearInterval(countdown);
+    countdown = setInterval(() => {
+        timeLeft--;
+        secondsSpan.innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(countdown);
+            btn.disabled = false;
+            container.style.display = "none";
+        }
+    }, 1000);
 }
 
 async function sendOTP() {
-  const phoneInput = document.getElementById("phone");
-  // 🔹 Clean phone number: remove spaces, dashes, and the + sign
-  let phone = phoneInput.value.replace(/\D/g, "");
+    const phoneInput = document.getElementById("phone");
+    let phone = phoneInput.value.replace(/\D/g, "");
 
-  // If user included '91' prefix, keep it. If not, don't worry, 
-  // backend adds it or expects a 10-digit number.
-  if (phone.length < 10) return alert("Please enter a valid 10-digit number");
+    if (phone.length < 10) return alert("Please enter a valid 10-digit number");
 
-  savedPhone = phone;
+    savedPhone = phone;
 
-  try {
-    const res = await fetch("https://employee-policy-system.onrender.com/api/employee/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone })
-    });
+    try {
+        const res = await fetch("https://employee-policy-system.onrender.com/api/employee/send-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone })
+        });
 
-    const data = await res.json();
-
-    if (res.ok) {
-      alert(data.message);
-      startTimer();
-    } else {
-      // 🔹 This handles the 401, 429, and 404 errors from your backend
-      alert(`Error: ${data.message}`);
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.message);
+            startTimer();
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    } catch (err) {
+        alert("Server unreachable. Please check your internet connection.");
     }
-  } catch (err) {
-    alert("Server unreachable. Please check your internet connection.");
-  }
 }
 
 async function verifyOTP() {
-  const otp = document.getElementById("otp").value;
-  if (!otp) return alert("Please enter the OTP");
+    const otp = document.getElementById("otp").value;
+    if (!otp) return alert("Please enter the OTP");
 
-  try {
-    const res = await fetch("https://employee-policy-system.onrender.com/api/employee/verify-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: savedPhone, otp })
-    });
+    try {
+        const res = await fetch("https://employee-policy-system.onrender.com/api/employee/verify-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: savedPhone, otp })
+        });
 
-    const data = await res.json();
-
-    if (res.ok && data.token) {
-      localStorage.setItem("employeeToken", data.token);
-      window.location.href = "policy.html";
-    } else {
-      alert(data.message || "Invalid OTP");
+        const data = await res.json();
+        if (res.ok && data.token) {
+            localStorage.setItem("employeeToken", data.token);
+            window.location.href = "policy.html";
+        } else {
+            alert(data.message || "Invalid OTP");
+        }
+    } catch (err) {
+        alert("Verification failed. Please try again.");
     }
-  } catch (err) {
-    alert("Verification failed. Please try again.");
-  }
 }
 
-// ... rest of your admin functions (showAdmin, showEmployee, adminLogin) ...
+// 🔹 Missing Admin Functions Added Below 🔹
+
+function showAdmin() {
+    document.getElementById("adminSection").classList.remove("hidden");
+    document.getElementById("employeeSection").classList.add("hidden");
+}
+
+function showEmployee() {
+    document.getElementById("employeeSection").classList.remove("hidden");
+    document.getElementById("adminSection").classList.add("hidden");
+}
+
+async function adminLogin() {
+    const username = document.getElementById("adminUsername").value;
+    const password = document.getElementById("adminPassword").value;
+    const errorEl = document.getElementById("adminError");
+
+    if (!username || !password) {
+        errorEl.innerText = "Please enter both credentials.";
+        return;
+    }
+
+    try {
+        const res = await fetch("https://employee-policy-system.onrender.com/api/admin/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+            localStorage.setItem("adminToken", data.token);
+            window.location.href = "admin-dashboard.html";
+        } else {
+            errorEl.innerText = data.message || "Invalid Admin credentials";
+        }
+    } catch (err) {
+        errorEl.innerText = "Connection error. Try again.";
+    }
+}
 </script>
 
 </body>
