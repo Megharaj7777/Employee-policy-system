@@ -103,10 +103,27 @@
   </div>
 </div>
 
+
 <script>
 let savedPhone = "";
 let countdown;
 
+// =========================
+// 🔹 TOGGLE SECTIONS (FIXED)
+// =========================
+function showAdmin() {
+    document.getElementById("employeeSection").classList.add("hidden");
+    document.getElementById("adminSection").classList.remove("hidden");
+}
+
+function showEmployee() {
+    document.getElementById("adminSection").classList.add("hidden");
+    document.getElementById("employeeSection").classList.remove("hidden");
+}
+
+// =========================
+// 🔹 TIMER
+// =========================
 function startTimer() {
     const btn = document.getElementById("otpBtn");
     const container = document.getElementById("timerContainer");
@@ -130,24 +147,25 @@ function startTimer() {
     }, 1000);
 }
 
+// =========================
+// 🔹 SEND OTP
+// =========================
 async function sendOTP() {
-    const phoneInput = document.getElementById("phone");
-    let phone = phoneInput.value.replace(/\D/g, "");
+    let phone = document.getElementById("phone").value.replace(/\D/g, "");
 
     if (phone.length < 10) return alert("Enter valid number");
 
-    savedPhone = phone;
+    savedPhone = phone.slice(-10);
 
     try {
         const res = await fetch("https://employee-policy-system.onrender.com/api/employee/send-otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone })
+            body: JSON.stringify({ phone: savedPhone })
         });
 
         const data = await res.json();
 
-        // ✅ FIXED LOGIC
         if (res.ok) {
             alert("OTP Sent Successfully");
             startTimer();
@@ -160,8 +178,11 @@ async function sendOTP() {
     }
 }
 
+// =========================
+// 🔹 VERIFY OTP
+// =========================
 async function verifyOTP() {
-    const otp = document.getElementById("otp").value;
+    const otp = document.getElementById("otp").value.trim();
 
     if (!otp) return alert("Enter OTP");
     if (!savedPhone) return alert("Request OTP first");
@@ -171,8 +192,8 @@ async function verifyOTP() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                phone: savedPhone.slice(-10),
-                otp: otp.trim()
+                phone: savedPhone,
+                otp
             })
         });
 
@@ -191,7 +212,43 @@ async function verifyOTP() {
     }
 }
 
+// =========================
+// 🔹 ADMIN LOGIN (NEW)
+// =========================
+async function adminLogin() {
+    const username = document.getElementById("adminUsername").value.trim();
+    const password = document.getElementById("adminPassword").value.trim();
+    const errorEl = document.getElementById("adminError");
+
+    if (!username || !password) {
+        errorEl.innerText = "Enter username and password";
+        return;
+    }
+
+    try {
+        const res = await fetch("https://employee-policy-system.onrender.com/api/admin/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+            localStorage.setItem("adminToken", data.token);
+            alert("Admin login successful");
+            window.location.href = "admin.html"; // create this page
+        } else {
+            errorEl.innerText = data.message || "Invalid credentials";
+        }
+
+    } catch (err) {
+        errorEl.innerText = "Server error";
+    }
+}
 </script>
+
+
 
 </body>
 </html>
