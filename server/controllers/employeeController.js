@@ -1,43 +1,80 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const axios = require("axios");
 
 // =========================
 // 🔹 SEND OTP
 // =========================
 exports.sendOTP = async (req, res) => {
   try {
-    const { phone } = req.body;
+    let { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ message: "Phone number required" });
+    }
+
+    // Normalize phone number
+    phone = phone.replace(/\D/g, "");
 
     const user = await User.findOne({ phone });
-    if (!user) return res.status(404).json({ message: "User not found. Contact Admin." });
+    if (!user) {
+      return res.status(404).json({ message: "User not found. Contact Admin." });
+    }
 
-    // Check if we need to reset the daily limit
+    // 🔹 Reset OTP count daily
     const today = new Date().toDateString();
-    if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
+    if (
+      user.otpLastSentDate &&
+      new Date(user.otpLastSentDate).toDateString() !== today
+    ) {
       user.otpCount = 0;
     }
 
-    // Limit to 3 OTPs per day for security
+    // 🔹 Limit OTP to 3 per day
     if (user.otpCount >= 3) {
-      return res.status(400).json({ message: "OTP limit reached. Try again tomorrow." });
+      return res.status(429).json({
+        message: "OTP limit reached. Try again tomorrow.",
+      });
     }
 
-    // Generate 6-digit OTP
+    // 🔹 Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     user.otp = otp;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 Minutes expiry
-    user.otpCount += 1;
+    user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 mins
+    user.otpCount = (user.otpCount || 0) + 1;
     user.otpLastSentDate = new Date();
 
     await user.save();
 
-    console.log(`OTP for ${phone}: ${otp}`); // In production, replace with Fast2SMS logic
+    // 🔥 SEND OTP via Message Central
+    try {
+      await axios.post(
+        "https://cpaas.messagecentral.com/verification/v3/send",
+        {
+          countryCode: "91",
+          mobileNumber: phone,
+          flowType: "SMS",
+          customerId: process.env.MESSAGECENTRAL_CUSTOMER_ID,
+          message: `Your OTP is ${otp}`,
+        },
+        {
+          headers: {
+            authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN,
+          },
+        }
+      );
+    } catch (smsError) {
+      console.error("SMS Error:", smsError.response?.data || smsError.message);
+    }
 
-    res.json({ message: `OTP Sent (${user.otpCount}/3)`, expiresIn: 300 });
+    res.json({
+      message: `OTP Sent Successfully (${user.otpCount}/3)`,
+      expiresIn: 300,
+    });
 
   } catch (err) {
-    console.error(err);
+    console.error("Send OTP Error:", err.message);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -47,32 +84,63 @@ exports.sendOTP = async (req, res) => {
 // =========================
 exports.verifyOTP = async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    let { phone, otp } = req.body;
 
-    const user = await User.findOne({ phone });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    // Validate OTP and Expiry
-    if (user.otp !== otp || user.otpExpiry < Date.now()) {
-      return res.status(400).json({ message: "Invalid or Expired OTP" });
+    if (!phone || !otp) {
+      return res.status(400).json({ message: "Phone and OTP required" });
     }
 
-    // Clear OTP after successful use
+    phone = phone.replace(/\D/g, "");
+
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔹 Validate OTP
+    if (user.otp !== otp || user.otpExpiry < Date.now()) {
+      return res.status(400).json({
+        message: "Invalid or Expired OTP",
+      });
+    }
+
+    // 🔹 Clear OTP
     user.otp = null;
     user.otpExpiry = null;
     await user.save();
 
-    // Sign Token with ID and Role
+    // 🔹 Generate JWT
     const token = jwt.sign(
       { id: user._id, role: "employee" },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ message: "Login Successful", token });
+    res.json({
+      message: "Login Successful",
+      token,
+      userId: user._id,
+    });
 
   } catch (err) {
-    console.error(err);
+    console.error("Verify OTP Error:", err.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// =========================
+// 🔹 GET CURRENT USER
+// =========================
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select(
+      "name phone hasSignedPolicy policyStatus"
+    );
+
+    res.json({ user });
+
+  } catch (err) {
+    console.error("GetMe Error:", err.message);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -82,25 +150,28 @@ exports.verifyOTP = async (req, res) => {
 // =========================
 exports.submitPolicy = async (req, res) => {
   try {
-    const { status } = req.body; // Expecting "agreed" or "disagreed"
-    
-    // req.user.id comes from your 'auth' middleware
+    const { status } = req.body; // "agreed" or "disagreed"
+
+    if (!["agreed", "disagreed"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
     const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    // 🔹 UPDATING BOTH FIELDS
-    // policyStatus: matches your Schema Enum ["pending", "agreed", "disagreed"]
-    // hasSignedPolicy: matches what your Admin Dashboard table usually looks for
     user.policyStatus = status;
-    user.hasSignedPolicy = (status === "agreed");
+    user.hasSignedPolicy = true;
 
     await user.save();
 
-    res.json({ message: "Policy response recorded successfully!" });
+    res.json({
+      message: "Policy response recorded successfully!",
+    });
 
   } catch (err) {
-    console.error("Submit Policy Error:", err);
-    res.status(500).json({ message: "Server Error: Could not save response." });
+    console.error("Submit Policy Error:", err.message);
+    res.status(500).json({ message: "Server Error" });
   }
 };

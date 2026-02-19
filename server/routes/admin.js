@@ -7,10 +7,11 @@ const Admin = require("../models/Admin");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
 
+// 🔹 Utility: Clean phone number
 const sanitizePhone = (phone) => phone.replace(/\D/g, "");
 
 // =========================
-// 🔹 ADMIN LOGIN (The Missing Piece)
+// 🔹 ADMIN LOGIN
 // =========================
 router.post("/login", async (req, res) => {
   try {
@@ -36,16 +37,20 @@ router.post("/login", async (req, res) => {
       { expiresIn: "2h" }
     );
 
-    res.json({ message: "Login Successful", token });
+    res.json({
+      message: "Login Successful",
+      token
+    });
 
   } catch (error) {
-    console.error("Admin Login Error:", error);
+    console.error("Admin Login Error:", error.message);
     res.status(500).json({ message: "Server Error" });
   }
 });
 
+
 // =========================
-// 🔹 GET ALL EMPLOYEES
+// 🔹 GET ALL EMPLOYEES (WITH SEARCH)
 // =========================
 router.get("/employees", auth, async (req, res) => {
   try {
@@ -53,17 +58,35 @@ router.get("/employees", auth, async (req, res) => {
       return res.status(403).json({ message: "Access Denied" });
     }
 
-    const users = await User.find()
+    const { search } = req.query;
+
+    let query = {};
+
+    // 🔥 SEARCH BY NAME OR PHONE
+    if (search) {
+      query = {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { phone: { $regex: search } }
+        ]
+      };
+    }
+
+    const users = await User.find(query)
       .select("name phone hasSignedPolicy policyStatus createdAt")
       .sort({ createdAt: -1 });
 
-    res.json({ employees: users });
+    res.json({
+      count: users.length,
+      employees: users
+    });
 
   } catch (error) {
-    console.error("Fetch Employees Error:", error);
+    console.error("Fetch Employees Error:", error.message);
     res.status(500).json({ message: "Server Error" });
   }
 });
+
 
 // =========================
 // 🔹 CREATE EMPLOYEE
@@ -75,12 +98,17 @@ router.post("/create-employee", auth, async (req, res) => {
     }
 
     let { name, phone } = req.body;
+
     if (!name || !phone) {
       return res.status(400).json({ message: "Name and phone are required" });
     }
 
     name = name.trim();
     phone = sanitizePhone(phone);
+
+    if (phone.length < 10) {
+      return res.status(400).json({ message: "Invalid phone number" });
+    }
 
     const existing = await User.findOne({ phone });
     if (existing) {
@@ -95,13 +123,18 @@ router.post("/create-employee", auth, async (req, res) => {
     });
 
     await user.save();
-    res.status(201).json({ message: "Employee Created Successfully", user });
+
+    res.status(201).json({
+      message: "Employee Created Successfully",
+      user
+    });
 
   } catch (error) {
-    console.error("Create Employee Error:", error);
+    console.error("Create Employee Error:", error.message);
     res.status(500).json({ message: "Server Error" });
   }
 });
+
 
 // =========================
 // 🔹 DELETE EMPLOYEE
@@ -113,14 +146,56 @@ router.delete("/delete-employee/:id", auth, async (req, res) => {
     }
 
     const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) return res.status(404).json({ message: "Employee not found" });
+
+    if (!user) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
 
     res.json({ message: "Employee Deleted Successfully" });
 
   } catch (error) {
-    console.error("Delete Employee Error:", error);
+    console.error("Delete Employee Error:", error.message);
     res.status(500).json({ message: "Server Error" });
   }
 });
+
+
+// =========================
+// 🔹 UPDATE EMPLOYEE (NEW - BONUS 🔥)
+// =========================
+router.put("/update-employee/:id", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access Denied" });
+    }
+
+    let { name, phone } = req.body;
+
+    const updateData = {};
+
+    if (name) updateData.name = name.trim();
+    if (phone) updateData.phone = sanitizePhone(phone);
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    res.json({
+      message: "Employee Updated Successfully",
+      user
+    });
+
+  } catch (error) {
+    console.error("Update Employee Error:", error.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
 
 module.exports = router;
