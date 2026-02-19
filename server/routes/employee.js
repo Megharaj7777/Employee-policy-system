@@ -30,36 +30,35 @@ router.post("/send-otp", async (req, res) => {
       return res.status(429).json({ message: "Maximum daily OTP limit reached (3/3)." });
     }
 
-    // 🔹 Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // 🔹 External API Call to MessageCentral
+    // 🔹 MessageCentral V3 API Call
     try {
-      // Logic: Some MessageCentral V3 accounts require the customerId WITHOUT the 'C-' prefix in the body
-      const bodyCustomerId = process.env.MESSAGECENTRAL_CUSTOMER_ID.replace("C-", "");
+      const customerId = process.env.MESSAGECENTRAL_CUSTOMER_ID.trim();
+      const authToken = process.env.MESSAGECENTRAL_AUTH_TOKEN.trim();
 
-      await axios.post(
-        "https://cpaas.messagecentral.com/verification/v3/send",
-        {
-          countryCode: "91",
-          customerId: bodyCustomerId, 
-          flowType: "SMS",
-          mobileNumber: phone,
-          otpLength: 6,
-          otp: otp,
-          message: `Your OTP for Hindware Policy Portal is ${otp}`
+      // MessageCentral V3 prefers parameters in the query string for the verification endpoint
+      const url = `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=${customerId}&flowType=SMS&mobileNumber=${phone}`;
+
+      const response = await axios.post(url, {}, {
+        headers: { 
+          "authToken": authToken,
+          "Content-Type": "application/json"
         },
-        {
-          headers: { 
-            "authToken": process.env.MESSAGECENTRAL_AUTH_TOKEN.trim(),
-            "Content-Type": "application/json"
-          },
-          timeout: 5000
-        }
-      );
+        timeout: 8000
+      });
 
-      // ✅ SUCCESS: SMS accepted by gateway, now update database
-      user.otp = otp;
+      /* NOTE: MessageCentral V3 generates the OTP for you to ensure DLT compliance.
+         We extract it from their response to save it in our database for verification.
+      */
+      const gatewayData = response.data;
+      const receivedOtp = gatewayData.data ? gatewayData.data.verificationCode : null;
+
+      if (!receivedOtp) {
+        console.error("GATEWAY RESPONSE MISSING OTP:", gatewayData);
+        throw new Error("Gateway accepted request but did not return a verification code.");
+      }
+
+      // ✅ SUCCESS: Update database
+      user.otp = receivedOtp.toString();
       user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 mins
       user.otpCount += 1;
       user.otpLastSentDate = new Date();
@@ -71,10 +70,9 @@ router.post("/send-otp", async (req, res) => {
       // Detailed logging for Render logs
       console.error("SMS GATEWAY ERROR:", apiErr.response?.data || apiErr.message);
       
-      const status = apiErr.response?.status === 401 ? 401 : 502;
-      return res.status(status).json({ 
-        message: "SMS Gateway error. Please check credentials or DLT template.",
-        error: apiErr.response?.data 
+      return res.status(502).json({ 
+        message: "SMS Gateway error. Please check Message Central credits or DLT status.",
+        error: apiErr.response?.data || apiErr.message
       });
     }
 
@@ -91,10 +89,13 @@ router.post("/verify-otp", async (req, res) => {
     phone = phone.replace(/\D/g, "");
 
     const user = await User.findOne({ phone });
-    if (!user || user.otp !== otp) {
+    
+    // Check if user exists and OTP matches
+    if (!user || !user.otp || user.otp !== otp.toString()) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
+    // Check expiry
     if (user.otpExpiry < Date.now()) {
       return res.status(400).json({ message: "OTP has expired" });
     }
@@ -104,6 +105,7 @@ router.post("/verify-otp", async (req, res) => {
     user.otpExpiry = null;
     await user.save();
 
+    // Create JWT
     const token = jwt.sign(
       { id: user._id, role: "employee" },
       process.env.JWT_SECRET,
@@ -113,11 +115,12 @@ router.post("/verify-otp", async (req, res) => {
     res.json({ message: "Login Successful", token });
 
   } catch (error) {
+    console.error("VERIFY ERROR:", error.message);
     res.status(500).json({ message: "Verification failed" });
   }
 });
 
-// 🔹 SUBMIT POLICY (Requires 'auth' middleware)
+// 🔹 SUBMIT POLICY
 router.post("/submit-policy", auth, async (req, res) => {
   try {
     const { status } = req.body; 
