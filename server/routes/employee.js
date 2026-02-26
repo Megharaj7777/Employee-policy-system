@@ -4,20 +4,20 @@ const User = require("../models/User");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 
-// 🔹 HELPER: Sanitize Phone Number
 const sanitizePhone = (phone) => {
   const cleaned = phone.replace(/\D/g, "");
   return cleaned.length > 10 ? cleaned.slice(-10) : cleaned;
 };
 
-// 🔹 MIDDLEWARE: Protect Routes (Prevents Logout Loop in Policy Page)
+// 🔹 MIDDLEWARE: Ensure user data is fully loaded
 const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization;
     if (!token) return res.status(401).json({ message: "No token, access denied" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id);
+    // Explicitly select all fields to ensure 'name' is fetched for the policy page
+    req.user = await User.findById(decoded.id).select("+name +policyStatus +hasSignedPolicy");
     
     if (!req.user) return res.status(401).json({ message: "User not found" });
     
@@ -28,7 +28,7 @@ const protect = async (req, res, next) => {
 };
 
 // =========================
-// 1️⃣ SEND OTP (Payment Template: 13274)
+// 1️⃣ SEND OTP
 // =========================
 router.post("/send-otp", async (req, res) => {
   try {
@@ -40,22 +40,20 @@ router.post("/send-otp", async (req, res) => {
     
     if (!user) return res.status(404).json({ message: "Employee not found in DB" });
 
-    // Rate Limiting (10 per day)
     const today = new Date().toDateString();
     if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
       user.otpCount = 0;
     }
-    if (user.otpCount >= 10) return res.status(429).json({ message: "Daily OTP limit reached" });
+    if (user.otpCount >= 10) return res.status(429).json({ message: "Daily limit reached" });
 
     const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
 
-    // ✅ SAVE TO DB FIRST (Enables manual login via logs if WhatsApp fails)
     await User.findOneAndUpdate(
       { phone: cleanPhone },
       {
         $set: {
           verificationId: generatedOtp,
-          otpExpiry: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
+          otpExpiry: new Date(Date.now() + 5 * 60 * 1000),
           otpLastSentDate: new Date(),
         },
         $inc: { otpCount: 1 }
@@ -64,10 +62,9 @@ router.post("/send-otp", async (req, res) => {
 
     console.log(`✅ [DB UPDATED] OTP for ${cleanPhone}: ${generatedOtp}`);
 
-    // 🚀 WHATSAPP API CALL
-    // Template: "Your last payment completed successfully. amount: {{1}}"
-    const variableData = `${generatedOtp}.00`; // Decimal formatting is REQUIRED for this template
-
+    // 🚀 FIX: Fast2SMS WhatsApp API call
+    // If money deducts but no SMS comes, we must change 'route' to 'business' 
+    // and ensure the variable is exactly what the template expects.
     try {
       const response = await axios({
         method: 'post',
@@ -77,22 +74,20 @@ router.post("/send-otp", async (req, res) => {
           'Content-Type': 'application/json'
         },
         data: {
-          "route": "otp",
+          "route": "otp", // Try changing this to "business" if it continues to fail
           "message_id": "13274",
           "phone_number_id": "1052434897942096",
           "numbers": `91${cleanPhone}`,
-          "variables_values": variableData 
+          "variables_values": `${generatedOtp}` // Some templates dislike the .00, try sending just the OTP
         }
       });
 
       if (response.data.return === true) {
         res.json({ message: "WhatsApp OTP sent successfully" });
       } else {
-        console.error("Fast2SMS Rejection:", response.data);
-        res.status(200).json({ message: "OTP saved. WhatsApp reported: " + response.data.message });
+        res.status(200).json({ message: "OTP stored. Gateway: " + response.data.message });
       }
     } catch (apiErr) {
-      console.error("WhatsApp Gateway Down:", apiErr.message);
       res.status(200).json({ message: "OTP stored in system. Check logs." });
     }
   } catch (err) {
@@ -115,12 +110,10 @@ router.post("/verify-otp", async (req, res) => {
 
     if (new Date() > user.otpExpiry) return res.status(400).json({ message: "OTP has expired" });
 
-    // Login successful - Clear OTP
     user.verificationId = null;
     user.otpExpiry = null;
     await user.save();
 
-    // Generate Token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "8h" });
     res.json({ message: "Login Successful", token });
   } catch (err) {
@@ -129,9 +122,10 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 // =========================
-// 3️⃣ GET ME (Required for Policy Page)
+// 3️⃣ GET ME (Username Fix)
 // =========================
 router.get("/me", protect, async (req, res) => {
+  // By sending req.user directly, we ensure the name field is included
   res.json({ user: req.user });
 });
 
