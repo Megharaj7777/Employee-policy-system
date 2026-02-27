@@ -133,7 +133,7 @@ function startTimer() {
 
 async function sendOTP() {
     let phoneInput = document.getElementById("phone").value.replace(/\D/g, "");
-    if (phoneInput.length < 10) return alert("Enter valid 10-digit number");
+    if (phoneInput.length < 10) return alert("Enter 10-digit number");
     savedPhone = phoneInput.slice(-10);
 
     try {
@@ -145,11 +145,13 @@ async function sendOTP() {
         const data = await res.json();
         
         if (res.ok) {
+            // Display the Verification ID from the DB on the screen
             document.getElementById("captchaArea").style.display = "block";
-            document.getElementById("captchaDisplay").innerText = data.captcha;
+            document.getElementById("captchaDisplay").innerText = data.displayCode;
+            document.getElementById("captchaDisplay").style.fontSize = "16px"; // ID might be long
+            
             document.getElementById("smsArea").classList.remove("hidden");
             document.getElementById("verifyBtn").classList.remove("hidden");
-            alert("Verification started! Check your phone for SMS.");
             startTimer();
         } else {
             alert(data.message);
@@ -163,8 +165,6 @@ async function verifyOTP() {
     const smsOtp = document.getElementById("smsOtp").value.trim();
     const captchaInput = document.getElementById("captchaInput").value.trim();
 
-    if (!smsOtp || !captchaInput) return alert("Enter both codes");
-
     try {
         const res = await fetch(`${API_URL}/employee/verify-otp`, {
             method: "POST",
@@ -172,7 +172,7 @@ async function verifyOTP() {
             body: JSON.stringify({ 
                 phone: savedPhone, 
                 otp: smsOtp, 
-                captcha: captchaInput 
+                enteredId: captchaInput // This must match the displayed ID
             })
         });
         const data = await res.json();
@@ -186,7 +186,6 @@ async function verifyOTP() {
         alert("Login failed");
     }
 }
-
 async function adminLogin() {
     const username = document.getElementById("adminUsername").value.trim();
     const password = document.getElementById("adminPassword").value.trim();
