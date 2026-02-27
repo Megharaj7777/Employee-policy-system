@@ -22,16 +22,6 @@ const protect = async (req, res, next) => {
   }
 };
 
-const express = require("express");
-const router = express.Router();
-const User = require("../models/User");
-const axios = require("axios");
-const jwt = require("jsonwebtoken");
-
-const sanitizePhone = (phone) => {
-    const cleaned = phone.replace(/\D/g, "");
-    return cleaned.length > 10 ? cleaned.slice(-10) : cleaned;
-};
 
 // =========================
 // 1️⃣ SEND OTP
