@@ -20,7 +20,6 @@ const protect = async (req, res, next) => {
     req.user = await User.findById(decoded.id).select("+name +policyStatus +hasSignedPolicy");
     
     if (!req.user) return res.status(401).json({ message: "User not found" });
-    
     next();
   } catch (err) {
     res.status(401).json({ message: "Invalid or expired token" });
@@ -28,7 +27,7 @@ const protect = async (req, res, next) => {
 };
 
 // =========================
-// 1️⃣ SEND OTP (SMS + Captcha Hybrid)
+// 1️⃣ SEND OTP (Mobile SMS) + GENERATE CAPTCHA (For DB)
 // =========================
 router.post("/send-otp", async (req, res) => {
   try {
@@ -36,19 +35,14 @@ router.post("/send-otp", async (req, res) => {
     if (!phone) return res.status(400).json({ message: "Phone required" });
 
     const cleanPhone = sanitizePhone(phone);
-    // Find user and select rate-limiting fields
     const user = await User.findOne({ phone: cleanPhone }).select("+otpCount +otpLastSentDate");
     
     if (!user) return res.status(404).json({ message: "Employee not found in DB" });
 
-    // Rate Limiting Logic
-    const today = new Date().toDateString();
-    if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
-      user.otpCount = 0;
-    }
-    if (user.otpCount >= 10) return res.status(429).json({ message: "Daily limit reached" });
+    // 🚀 1. Generate a SEPARATE 4-digit Captcha for the screen
+    const captchaCode = Math.floor(1000 + Math.random() * 9000).toString();
 
-    // 🚀 MESSAGE CENTRAL SMS CALL
+    // 🚀 2. Call Message Central for the Mobile OTP
     try {
       const response = await axios({
         method: 'post',
@@ -56,45 +50,39 @@ router.post("/send-otp", async (req, res) => {
         params: {
           countryCode: '91',
           customerId: process.env.MC_CUSTOMER_ID,
-          flowType: 'SMS', 
+          flowType: 'SMS',
           mobileNumber: cleanPhone,
           otpLength: '4'
         },
-        headers: {
-          'authToken': process.env.MC_AUTH_TOKEN 
-        }
+        headers: { 'authToken': process.env.MC_AUTH_TOKEN }
       });
 
       if (response.data.responseCode === 200) {
-        const sentOtp = response.data.data.otp;
-
-        // ✅ UPDATE DATABASE: Store the OTP for verification later
+        // ✅ 3. Store the CAPTCHA code in verificationId (not the SMS OTP)
         await User.findOneAndUpdate(
           { phone: cleanPhone },
           {
             $set: {
-              verificationId: sentOtp, 
-              otpExpiry: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
+              verificationId: captchaCode, 
+              otpExpiry: new Date(Date.now() + 5 * 60 * 1000),
               otpLastSentDate: new Date(),
             },
             $inc: { otpCount: 1 }
           }
         );
 
-        console.log(`✅ [CAPTCHA GENERATED] Phone: ${cleanPhone} | OTP: ${sentOtp}`);
+        console.log(`✅ SMS sent. Captcha stored in DB for ${cleanPhone}: ${captchaCode}`);
 
-        // ✅ RETURN TO FRONTEND: This allows index.html to show it as a captcha
+        // ✅ 4. Send the captcha to frontend to display on screen
         res.json({ 
-          message: "OTP sent and Captcha generated", 
-          captcha: sentOtp 
+          message: "OTP sent to mobile. Please enter it along with the captcha.", 
+          captcha: captchaCode 
         });
-
       } else {
-        res.status(400).json({ message: "Gateway error: " + response.data.message });
+        res.status(400).json({ message: "SMS Gateway error" });
       }
     } catch (apiErr) {
-      console.error("SMS Provider Error:", apiErr.response?.data || apiErr.message);
-      res.status(500).json({ message: "Failed to process request" });
+      res.status(500).json({ message: "Failed to send SMS" });
     }
   } catch (err) {
     res.status(500).json({ message: "Internal server error" });
@@ -102,26 +90,50 @@ router.post("/send-otp", async (req, res) => {
 });
 
 // =========================
-// 2️⃣ VERIFY OTP (No changes needed, verifies against DB)
+// 2️⃣ VERIFY BOTH (SMS OTP + CAPTCHA)
 // =========================
 router.post("/verify-otp", async (req, res) => {
   try {
-    let { phone, otp } = req.body;
+    let { phone, otp, captcha } = req.body; // Expects both from frontend
     const cleanPhone = sanitizePhone(phone);
-    const user = await User.findOne({ phone: cleanPhone }).select("+verificationId +otpExpiry");
 
-    if (!user || user.verificationId !== otp.toString()) {
-      return res.status(400).json({ message: "Invalid Code" });
+    // 🚀 1. Verify CAPTCHA against Database
+    const user = await User.findOne({ phone: cleanPhone }).select("+verificationId +otpExpiry");
+    
+    if (!user || user.verificationId !== captcha.toString()) {
+      return res.status(400).json({ message: "Invalid Captcha code from screen" });
     }
 
-    if (new Date() > user.otpExpiry) return res.status(400).json({ message: "Code expired" });
+    if (new Date() > user.otpExpiry) return res.status(400).json({ message: "Captcha expired" });
 
-    user.verificationId = null;
-    user.otpExpiry = null;
-    await user.save();
+    // 🚀 2. Verify SMS OTP against Message Central API
+    try {
+      const verifyRes = await axios({
+        method: 'get',
+        url: 'https://cpaas.messagecentral.com/verification/v3/validate',
+        params: {
+          countryCode: '91',
+          mobileNumber: cleanPhone,
+          verificationCode: otp, // The OTP user received on phone
+          customerId: process.env.MC_CUSTOMER_ID
+        },
+        headers: { 'authToken': process.env.MC_AUTH_TOKEN }
+      });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "8h" });
-    res.json({ message: "Login Successful", token });
+      if (verifyRes.data.responseCode === 200) {
+        // Success! Clear records and login
+        user.verificationId = null;
+        user.otpExpiry = null;
+        await user.save();
+
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "8h" });
+        res.json({ message: "Login Successful", token });
+      } else {
+        res.status(400).json({ message: "Invalid SMS OTP" });
+      }
+    } catch (err) {
+      res.status(500).json({ message: "Verification service failed" });
+    }
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
