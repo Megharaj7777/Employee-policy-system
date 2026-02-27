@@ -145,21 +145,17 @@ async function sendOTP() {
         const data = await res.json();
         
         if (res.ok) {
-            // Show Captcha Box
             document.getElementById("captchaArea").style.display = "block";
             document.getElementById("captchaDisplay").innerText = data.captcha;
-            
-            // Show SMS OTP Input and Verify Button
             document.getElementById("smsArea").classList.remove("hidden");
             document.getElementById("verifyBtn").classList.remove("hidden");
-            
-            alert("Verification initiated! Check your phone for SMS OTP.");
+            alert("Verification started! Check your phone for SMS.");
             startTimer();
         } else {
-            alert(data.message || "Failed to send OTP");
+            alert(data.message);
         }
     } catch (err) {
-        alert("Server error connecting to backend");
+        alert("Server error");
     }
 }
 
@@ -167,7 +163,7 @@ async function verifyOTP() {
     const smsOtp = document.getElementById("smsOtp").value.trim();
     const captchaInput = document.getElementById("captchaInput").value.trim();
 
-    if (!smsOtp || !captchaInput) return alert("Please enter both SMS OTP and Captcha");
+    if (!smsOtp || !captchaInput) return alert("Enter both codes");
 
     try {
         const res = await fetch(`${API_URL}/employee/verify-otp`, {
@@ -180,15 +176,14 @@ async function verifyOTP() {
             })
         });
         const data = await res.json();
-        if (res.ok && data.token) {
+        if (res.ok) {
             localStorage.setItem("employeeToken", data.token);
-            alert("Login successful");
             window.location.href = "policy.html";
         } else {
-            alert(data.message || "Invalid credentials");
+            alert(data.message);
         }
     } catch (err) {
-        alert("Verification failed");
+        alert("Login failed");
     }
 }
 
