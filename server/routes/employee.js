@@ -93,10 +93,10 @@ router.post("/verify-otp", async (req, res) => {
             url: 'https://cpaas.messagecentral.com/verification/v3/validateOtp',
             params: {
                 countryCode: '91',
-                mobileNumber: cleanPhone,
-                verificationCode: otp,            // Code from SMS
+                mobileNumber: cleanPhone,           // Code from SMS
                 verificationId: enteredId,        // ID from Screen
-                customerId: process.env.MC_CUSTOMER_ID
+                customerId: process.env.MC_CUSTOMER_ID,
+                code: otp
             },
             headers: { 'authToken': process.env.MC_AUTH_TOKEN }
         });
