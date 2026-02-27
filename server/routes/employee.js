@@ -4,19 +4,19 @@ const User = require("../models/User");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 
+// 🔹 HELPER: Sanitize Phone Number
 const sanitizePhone = (phone) => {
   const cleaned = phone.replace(/\D/g, "");
   return cleaned.length > 10 ? cleaned.slice(-10) : cleaned;
 };
 
-// 🔹 MIDDLEWARE: Ensure user data is fully loaded
+// 🔹 MIDDLEWARE: Protect Routes
 const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization;
     if (!token) return res.status(401).json({ message: "No token, access denied" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Explicitly select all fields to ensure 'name' is fetched for the policy page
     req.user = await User.findById(decoded.id).select("+name +policyStatus +hasSignedPolicy");
     
     if (!req.user) return res.status(401).json({ message: "User not found" });
@@ -28,7 +28,7 @@ const protect = async (req, res, next) => {
 };
 
 // =========================
-// 1️⃣ SEND OTP
+// 1️⃣ SEND OTP (SMS + Captcha Hybrid)
 // =========================
 router.post("/send-otp", async (req, res) => {
   try {
@@ -36,59 +36,65 @@ router.post("/send-otp", async (req, res) => {
     if (!phone) return res.status(400).json({ message: "Phone required" });
 
     const cleanPhone = sanitizePhone(phone);
+    // Find user and select rate-limiting fields
     const user = await User.findOne({ phone: cleanPhone }).select("+otpCount +otpLastSentDate");
     
     if (!user) return res.status(404).json({ message: "Employee not found in DB" });
 
+    // Rate Limiting Logic
     const today = new Date().toDateString();
     if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
       user.otpCount = 0;
     }
     if (user.otpCount >= 10) return res.status(429).json({ message: "Daily limit reached" });
 
-    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
-
-    await User.findOneAndUpdate(
-      { phone: cleanPhone },
-      {
-        $set: {
-          verificationId: generatedOtp,
-          otpExpiry: new Date(Date.now() + 5 * 60 * 1000),
-          otpLastSentDate: new Date(),
-        },
-        $inc: { otpCount: 1 }
-      }
-    );
-
-    console.log(`✅ [DB UPDATED] OTP for ${cleanPhone}: ${generatedOtp}`);
-
-    // 🚀 FIX: Fast2SMS WhatsApp API call
-    // If money deducts but no SMS comes, we must change 'route' to 'business' 
-    // and ensure the variable is exactly what the template expects.
+    // 🚀 MESSAGE CENTRAL SMS CALL
     try {
       const response = await axios({
         method: 'post',
-        url: 'https://www.fast2sms.com/dev/whatsapp',
-        headers: {
-          'authorization': process.env.FAST2SMS_KEY,
-          'Content-Type': 'application/json'
+        url: 'https://cpaas.messagecentral.com/verification/v3/send',
+        params: {
+          countryCode: '91',
+          customerId: process.env.MC_CUSTOMER_ID,
+          flowType: 'SMS', 
+          mobileNumber: cleanPhone,
+          otpLength: '4'
         },
-        data: {
-          "route": "otp", // Try changing this to "business" if it continues to fail
-          "message_id": "13274",
-          "phone_number_id": "1052434897942096",
-          "numbers": `91${cleanPhone}`,
-          "variables_values": `${generatedOtp}` // Some templates dislike the .00, try sending just the OTP
+        headers: {
+          'authToken': process.env.MC_AUTH_TOKEN 
         }
       });
 
-      if (response.data.return === true) {
-        res.json({ message: "WhatsApp OTP sent successfully" });
+      if (response.data.responseCode === 200) {
+        const sentOtp = response.data.data.otp;
+
+        // ✅ UPDATE DATABASE: Store the OTP for verification later
+        await User.findOneAndUpdate(
+          { phone: cleanPhone },
+          {
+            $set: {
+              verificationId: sentOtp, 
+              otpExpiry: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
+              otpLastSentDate: new Date(),
+            },
+            $inc: { otpCount: 1 }
+          }
+        );
+
+        console.log(`✅ [CAPTCHA GENERATED] Phone: ${cleanPhone} | OTP: ${sentOtp}`);
+
+        // ✅ RETURN TO FRONTEND: This allows index.html to show it as a captcha
+        res.json({ 
+          message: "OTP sent and Captcha generated", 
+          captcha: sentOtp 
+        });
+
       } else {
-        res.status(200).json({ message: "OTP stored. Gateway: " + response.data.message });
+        res.status(400).json({ message: "Gateway error: " + response.data.message });
       }
     } catch (apiErr) {
-      res.status(200).json({ message: "OTP stored in system. Check logs." });
+      console.error("SMS Provider Error:", apiErr.response?.data || apiErr.message);
+      res.status(500).json({ message: "Failed to process request" });
     }
   } catch (err) {
     res.status(500).json({ message: "Internal server error" });
@@ -96,7 +102,7 @@ router.post("/send-otp", async (req, res) => {
 });
 
 // =========================
-// 2️⃣ VERIFY OTP
+// 2️⃣ VERIFY OTP (No changes needed, verifies against DB)
 // =========================
 router.post("/verify-otp", async (req, res) => {
   try {
@@ -105,10 +111,10 @@ router.post("/verify-otp", async (req, res) => {
     const user = await User.findOne({ phone: cleanPhone }).select("+verificationId +otpExpiry");
 
     if (!user || user.verificationId !== otp.toString()) {
-      return res.status(400).json({ message: "Invalid OTP code" });
+      return res.status(400).json({ message: "Invalid Code" });
     }
 
-    if (new Date() > user.otpExpiry) return res.status(400).json({ message: "OTP has expired" });
+    if (new Date() > user.otpExpiry) return res.status(400).json({ message: "Code expired" });
 
     user.verificationId = null;
     user.otpExpiry = null;
@@ -117,34 +123,25 @@ router.post("/verify-otp", async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "8h" });
     res.json({ message: "Login Successful", token });
   } catch (err) {
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// =========================
-// 3️⃣ GET ME (Username Fix)
-// =========================
-router.get("/me", protect, async (req, res) => {
-  // By sending req.user directly, we ensure the name field is included
-  res.json({ user: req.user });
-});
+// 3️⃣ PROFILE ROUTE
+router.get("/me", protect, (req, res) => res.json({ user: req.user }));
 
-// =========================
 // 4️⃣ SUBMIT POLICY
-// =========================
 router.post("/submit-policy", protect, async (req, res) => {
-  try {
-    const { status } = req.body;
-    if (!['agreed', 'disagreed'].includes(status)) return res.status(400).json({ message: "Invalid selection" });
+  req.user.policyStatus = req.body.status;
+  req.user.hasSignedPolicy = true;
+  await req.user.save();
+  res.json({ message: "Recorded" });
+});
 
-    req.user.policyStatus = status;
-    req.user.hasSignedPolicy = true;
-    await req.user.save();
-
-    res.json({ message: "Response recorded" });
-  } catch (err) {
-    res.status(500).json({ message: "Submission failed" });
-  }
+// 5️⃣ ADMIN ROUTE
+router.get("/admin/all-responses", async (req, res) => {
+  const employees = await User.find({}, "name phone hasSignedPolicy policyStatus");
+  res.json(employees);
 });
 
 module.exports = router;

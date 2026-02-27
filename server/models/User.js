@@ -1,40 +1,66 @@
-const mongoose = require("mongoose");
+// =========================
+// 1️⃣ SEND OTP (Normal SMS via Message Central)
+// =========================
+router.post("/send-otp", async (req, res) => {
+  try {
+    let { phone } = req.body;
+    if (!phone) return res.status(400).json({ message: "Phone required" });
 
-const userSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: [true, "Name is required"], trim: true },
-    phone: { 
-      type: String, 
-      required: [true, "Phone number is required"], 
-      unique: true, 
-      trim: true, 
-      index: true 
-    },
+    const cleanPhone = sanitizePhone(phone);
+    const user = await User.findOne({ phone: cleanPhone }).select("+otpCount +otpLastSentDate");
+    
+    if (!user) return res.status(404).json({ message: "Employee not found in DB" });
 
-    // 🔒 Stores the 4-digit WhatsApp OTP
-    verificationId: { 
-      type: String, 
-      default: null, 
-      select: false 
-    },
+    // Rate Limiting (Prevent abuse)
+    const today = new Date().toDateString();
+    if (user.otpLastSentDate && new Date(user.otpLastSentDate).toDateString() !== today) {
+      user.otpCount = 0;
+    }
+    if (user.otpCount >= 10) return res.status(429).json({ message: "Daily limit reached" });
 
-    otpExpiry: { 
-      type: Date, 
-      default: null, 
-      select: false 
-    },
+    // 🚀 MESSAGE CENTRAL SMS CALL
+    try {
+      const response = await axios({
+        method: 'post',
+        url: 'https://cpaas.messagecentral.com/verification/v3/send',
+        params: {
+          countryCode: '91',
+          customerId: process.env.MC_CUSTOMER_ID,
+          flowType: 'SMS', // 🔹 Changed from WHATSAPP to SMS
+          mobileNumber: cleanPhone,
+          otpLength: '4'
+        },
+        headers: {
+          'authToken': process.env.MC_AUTH_TOKEN 
+        }
+      });
 
-    otpCount: { type: Number, default: 0 },
-    otpLastSentDate: { type: Date, default: null },
+      if (response.data.responseCode === 200) {
+        // Message Central generates the OTP. We capture it to sync with our DB.
+        const sentOtp = response.data.data.otp;
 
-    policyStatus: { 
-      type: String, 
-      enum: ["pending", "agreed", "disagreed"], 
-      default: "pending" 
-    },
-    hasSignedPolicy: { type: Boolean, default: false }
-  },
-  { timestamps: true }
-);
+        await User.findOneAndUpdate(
+          { phone: cleanPhone },
+          {
+            $set: {
+              verificationId: sentOtp, 
+              otpExpiry: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
+              otpLastSentDate: new Date(),
+            },
+            $inc: { otpCount: 1 }
+          }
+        );
 
-module.exports = mongoose.model("User", userSchema);
+        console.log(`✅ [SMS SENT] OTP for ${cleanPhone}: ${sentOtp}`);
+        res.json({ message: "SMS OTP sent successfully" });
+      } else {
+        res.status(400).json({ message: "SMS Gateway error: " + response.data.message });
+      }
+    } catch (apiErr) {
+      console.error("SMS Provider Error:", apiErr.response?.data || apiErr.message);
+      res.status(500).json({ message: "Failed to send SMS OTP" });
+    }
+  } catch (err) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
