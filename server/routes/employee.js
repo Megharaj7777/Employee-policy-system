@@ -90,7 +90,7 @@ router.post("/verify-otp", async (req, res) => {
         // Calling Message Central Validate API
         const verifyRes = await axios({
             method: 'get',
-            url: 'https://cpaas.messagecentral.com/verification/v3/validate',
+            url: 'https://cpaas.messagecentral.com/verification/v3/validateOtp',
             params: {
                 countryCode: '91',
                 mobileNumber: cleanPhone,
