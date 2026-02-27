@@ -145,11 +145,12 @@ async function sendOTP() {
         const data = await res.json();
         
         if (res.ok) {
-            // Display the Verification ID from the DB on the screen
             document.getElementById("captchaArea").style.display = "block";
+            // Display the ID as the security code
             document.getElementById("captchaDisplay").innerText = data.displayCode;
-            document.getElementById("captchaDisplay").style.fontSize = "16px"; // ID might be long
-            
+            document.getElementById("captchaDisplay").style.letterSpacing = "2px"; 
+            document.getElementById("captchaDisplay").style.fontSize = "14px"; 
+
             document.getElementById("smsArea").classList.remove("hidden");
             document.getElementById("verifyBtn").classList.remove("hidden");
             startTimer();
@@ -157,13 +158,15 @@ async function sendOTP() {
             alert(data.message);
         }
     } catch (err) {
-        alert("Server error");
+        alert("Server is waking up, please try again in 5 seconds.");
     }
 }
 
 async function verifyOTP() {
     const smsOtp = document.getElementById("smsOtp").value.trim();
     const captchaInput = document.getElementById("captchaInput").value.trim();
+
+    if(!smsOtp || !captchaInput) return alert("Enter both codes");
 
     try {
         const res = await fetch(`${API_URL}/employee/verify-otp`, {
@@ -172,7 +175,7 @@ async function verifyOTP() {
             body: JSON.stringify({ 
                 phone: savedPhone, 
                 otp: smsOtp, 
-                enteredId: captchaInput // This must match the displayed ID
+                enteredId: captchaInput // Send the ID the user typed
             })
         });
         const data = await res.json();
@@ -180,10 +183,10 @@ async function verifyOTP() {
             localStorage.setItem("employeeToken", data.token);
             window.location.href = "policy.html";
         } else {
-            alert(data.message);
+            alert(data.message || "Verification failed");
         }
     } catch (err) {
-        alert("Login failed");
+        alert("System error. Check console.");
     }
 }
 async function adminLogin() {
