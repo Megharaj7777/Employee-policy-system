@@ -36,7 +36,7 @@
             <path d="M118.793 30.8543H114.929V13.437H118.73V15.443H119.323C119.63 14.8274 120.148 14.2967 120.868 13.8403C121.599 13.3839 122.573 13.1504 123.791 13.1504C125.008 13.1504 126.077 13.4051 126.85 13.9252C127.623 14.4453 128.206 15.1033 128.608 15.8994H129.201C129.603 15.1246 130.175 14.4665 130.927 13.9464C131.678 13.4157 132.748 13.1504 134.124 13.1504C135.225 13.1504 136.22 13.3839 137.099 13.8403C137.978 14.2967 138.677 14.9866 139.196 15.8994C139.714 16.8122 139.968 17.9479 139.968 19.2852V30.8543H136.104V19.6036C136.104 18.5741 135.829 17.778 135.278 17.2261C134.728 16.6742 133.944 16.3982 132.938 16.3982C131.858 16.3982 131.001 16.7485 130.355 17.4596C129.709 18.1601 129.391 19.1897 129.391 20.527V30.8543H125.527V19.6036C125.527 18.5741 125.252 17.778 124.701 17.2261C124.151 16.6742 123.378 16.3982 122.393 16.3982C121.292 16.3982 120.413 16.7485 119.778 17.4596C119.132 18.1601 118.814 19.1897 118.814 20.527V30.8543H118.793Z" fill="#022D5B"/>
             <path d="M151.582 31.3427C149.846 31.3427 148.322 30.9712 146.987 30.2282C145.664 29.4853 144.626 28.4451 143.896 27.0865C143.155 25.7386 142.784 24.1571 142.784 22.3421V21.9176C142.784 20.1026 143.144 18.5317 143.875 17.1732C144.605 15.8252 145.622 14.7744 146.935 14.0315C148.247 13.2885 149.761 12.917 151.477 12.917C153.192 12.917 154.611 13.2885 155.87 14.0315C157.141 14.7744 158.126 15.8146 158.824 17.1519C159.523 18.4893 159.883 20.0389 159.883 21.8114V23.2231H146.733C146.776 24.6559 147.273 25.8022 148.216 26.662C149.158 27.5217 150.312 27.9463 151.699 27.9463C153.086 27.9463 154.028 27.6491 154.685 27.0653C155.341 26.4815 155.849 25.8129 156.199 25.0593L159.364 26.6832C159.036 27.3413 158.56 28.0312 157.935 28.7423C157.31 29.464 156.495 30.069 155.468 30.5785C154.441 31.088 153.149 31.3321 151.582 31.3321V31.3427ZM146.755 20.3043H155.934C155.839 19.0837 155.394 18.1178 154.579 17.4173C153.774 16.7168 152.715 16.3559 151.434 16.3559C150.153 16.3559 149.063 16.7061 148.247 17.4173C147.443 18.1178 146.945 19.0837 146.755 20.3043Z" fill="#022D5B"/>
             <path d="M169.835 31.3426C168.406 31.3426 167.083 30.9924 165.876 30.3025C164.669 29.6126 163.695 28.5936 162.953 27.2563C162.212 25.9189 161.842 24.3056 161.842 22.427V21.8963C161.842 20.0176 162.202 18.4043 162.932 17.067C163.663 15.7296 164.637 14.7001 165.854 13.9995C167.072 13.299 168.396 12.9382 169.825 12.9382C170.926 12.9382 171.858 13.0761 172.599 13.3415C173.351 13.6068 173.965 13.9571 174.441 14.3816C174.917 14.8062 175.277 15.2414 175.51 15.6872H176.103V6.1665H179.968V30.8438H176.167V28.4769H175.574C175.15 29.2092 174.505 29.8673 173.626 30.4511C172.747 31.0348 171.477 31.332 169.814 31.332L169.835 31.3426ZM170.958 27.9568C172.461 27.9568 173.7 27.4686 174.685 26.4921C175.669 25.5156 176.167 24.1252 176.167 22.3102V21.96C176.167 20.145 175.68 18.7652 174.706 17.7993C173.732 16.8335 172.482 16.3558 170.958 16.3558C169.433 16.3558 168.216 16.8335 167.231 17.7993C166.246 18.7652 165.749 20.145 165.749 21.96V22.3102C165.749 24.1252 166.246 25.5156 167.231 26.4921C168.216 27.4686 169.454 27.9568 170.958 27.9568Z" fill="#022D5B"/>
-        </g>
+         </g>
     </svg>
 </div>
 
@@ -59,45 +59,44 @@
 </div>
 
 <script>
-  // Ensure we use the same key name used in index.html
   const token = localStorage.getItem("employeeToken");
   const API_URL = "https://employee-policy-system.onrender.com/api/employee";
 
+  // Redirect if no token is found
   if (!token) {
     window.location.href = "index.html";
   }
 
   async function loadUserData() {
     try {
-      console.log("Fetching user data with token:", token ? "Token Exists" : "No Token");
-      
       const res = await fetch(`${API_URL}/me`, {
         method: "GET",
         headers: { 
-          "Authorization": token, // Raw token
+          "Authorization": token, 
           "Content-Type": "application/json"
         }
       });
 
       if (!res.ok) {
-          if(res.status === 401) logout();
-          throw new Error(`Error ${res.status}: Failed to fetch profile`);
+          if(res.status === 401) {
+              console.warn("Token expired or invalid");
+              logout();
+          }
+          throw new Error("Failed to fetch profile");
       }
 
       const data = await res.json();
-      console.log("Full Server Response:", data);
-
-      // 🔹 Check exactly how your backend sends the data
-      // If your backend sends { user: { name: "Meghu" } }
+      
+      // Handle data nesting (backend returns { user: { ... } })
       const user = data.user || data; 
       
       if (user && user.name) {
           document.getElementById("displayName").innerText = user.name;
       } else {
           document.getElementById("displayName").innerText = "Employee";
-          console.warn("User name field missing in response data");
       }
 
+      // Handle UI if policy is already signed
       if (user.hasSignedPolicy) {
         document.getElementById("submitBtn").style.display = "none";
         document.getElementById("statusMsg").style.display = "block";
@@ -110,8 +109,8 @@
         });
       }
     } catch (err) {
-      console.error("Fetch Error:", err.message);
-      document.getElementById("displayName").innerText = "Error loading name";
+      console.error("Error loading user data:", err);
+      document.getElementById("displayName").innerText = "Employee";
     }
   }
 
@@ -145,6 +144,7 @@
     } catch (err) {
       alert("Network error.");
       submitBtn.disabled = false;
+      submitBtn.innerText = "Submit Response";
     }
   }
 
@@ -153,7 +153,7 @@
     window.location.href = "index.html";
   }
 
-  // Use DOMContentLoaded for safer execution
+  // Load data immediately on page load
   document.addEventListener("DOMContentLoaded", loadUserData);
 </script>
 
