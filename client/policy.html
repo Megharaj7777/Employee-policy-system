@@ -42,7 +42,7 @@
 
 <div class="card">
   <div class="user-info">
-    Welcome, <span id="displayName" class="user-name">Fetching name...</span>
+    Welcome, <span id="displayName" class="user-name">Loading...</span>
   </div>
 
   <h2>Company Policy Agreement</h2>
@@ -59,10 +59,10 @@
 </div>
 
 <script>
+  // Consistent token key
   const token = localStorage.getItem("employeeToken");
   const API_URL = "https://employee-policy-system.onrender.com/api/employee";
 
-  // Redirect if no token is found
   if (!token) {
     window.location.href = "index.html";
   }
@@ -78,16 +78,14 @@
       });
 
       if (!res.ok) {
-          if(res.status === 401) {
-              console.warn("Token expired or invalid");
-              logout();
-          }
-          throw new Error("Failed to fetch profile");
+        if (res.status === 401) logout();
+        throw new Error("Auth failed");
       }
 
       const data = await res.json();
-      
-      // Handle data nesting (backend returns { user: { ... } })
+      console.log("Full Profile Data:", data); // Check your browser console
+
+      // Handle nested or flat data response
       const user = data.user || data; 
       
       if (user && user.name) {
@@ -96,11 +94,11 @@
           document.getElementById("displayName").innerText = "Employee";
       }
 
-      // Handle UI if policy is already signed
+      // Pre-fill if already signed
       if (user.hasSignedPolicy) {
         document.getElementById("submitBtn").style.display = "none";
         document.getElementById("statusMsg").style.display = "block";
-        document.getElementById("instr").innerHTML = `Your recorded response: <strong>${(user.policyStatus || 'Agreed').toUpperCase()}</strong>`;
+        document.getElementById("instr").innerHTML = `Your recorded response: <strong>${(user.policyStatus || 'agreed').toUpperCase()}</strong>`;
         
         const radios = document.getElementsByName("policy");
         radios.forEach(r => {
@@ -109,7 +107,7 @@
         });
       }
     } catch (err) {
-      console.error("Error loading user data:", err);
+      console.error("Profile load error:", err);
       document.getElementById("displayName").innerText = "Employee";
     }
   }
@@ -137,14 +135,13 @@
         location.reload(); 
       } else {
         const errData = await res.json();
-        alert("Error: " + (errData.message || "Failed to submit."));
+        alert("Error: " + (errData.message || "Submission failed."));
         submitBtn.disabled = false;
         submitBtn.innerText = "Submit Response";
       }
     } catch (err) {
       alert("Network error.");
       submitBtn.disabled = false;
-      submitBtn.innerText = "Submit Response";
     }
   }
 
@@ -153,7 +150,7 @@
     window.location.href = "index.html";
   }
 
-  // Load data immediately on page load
+  // Initial load
   document.addEventListener("DOMContentLoaded", loadUserData);
 </script>
 
