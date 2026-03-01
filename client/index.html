@@ -27,7 +27,6 @@
     .logo-header { position: absolute; top: 20px; left: 20px; background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; }
     .logo-header svg { width: 140px; height: auto; }
 
-    /* TOAST MESSAGE STYLE */
     #toast {
       visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
       border-radius: 8px; padding: 16px; position: fixed; z-index: 1001; left: 50%; bottom: 30px;
@@ -153,7 +152,7 @@ async function sendOTP() {
         const data = await res.json();
         
         if (res.ok) {
-            showToast(data.message, "#28a745"); // Shows "OTP sent successfully"
+            showToast(data.message, "#28a745");
             document.getElementById("captchaArea").style.display = "block";
             document.getElementById("captchaDisplay").innerText = data.displayCode;
             document.getElementById("smsArea").classList.remove("hidden");
@@ -193,10 +192,18 @@ async function verifyOTP() {
             })
         });
         const data = await res.json();
-        if (res.ok) {
-            showToast(data.message, "#28a745"); // Shows "Login Successful"
+        
+        if (res.ok && data.token) {
+            // FIX: Ensure token is set before redirecting
             localStorage.setItem("employeeToken", data.token);
-            setTimeout(() => { window.location.href = "dashboard.html"; }, 1500);
+            
+            // Double-check storage before redirect
+            if(localStorage.getItem("employeeToken")) {
+                showToast("Login Successful!", "#28a745");
+                setTimeout(() => { 
+                    window.location.replace("dashboard.html"); 
+                }, 800);
+            }
         } else {
             alert(data.message || "Verification failed");
             verifyBtn.innerText = "Verify & Login";
@@ -223,7 +230,7 @@ async function adminLogin() {
         const data = await res.json();
         if (res.ok && data.token) {
             localStorage.setItem("adminToken", data.token);
-            window.location.href = "admin-dashboard.html"; 
+            window.location.replace("admin-dashboard.html"); 
         } else {
             errorEl.innerText = data.message || "Invalid credentials";
         }
