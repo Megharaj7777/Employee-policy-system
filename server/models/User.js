@@ -11,7 +11,10 @@ const policyResponseSchema = new mongoose.Schema({
       "data_privacy",
       "travel_expense",
       "anti_harassment",
-      "workplace_safety"
+      "workplace_safety",
+      "banding",     // 🔹 Add this
+      "holidays",    // 🔹 Add this
+      "leaves"
     ]
   },
   status: {

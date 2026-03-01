@@ -123,15 +123,20 @@
         });
 
         async function fetchUserStatus() {
-            try {
-                const res = await fetch('https://employee-policy-system.onrender.com/api/employee/status', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                });
-                if (res.status === 401) return logout();
-                const data = await res.json();
-                signedPolicies = data.policySubmissions.map(p => p.policyKey);
-                updateSidebarStatus();
-            } catch (err) { console.error("Status fetch failed", err); }
+// Inside your fetchUserStatus function in dashboard.html
+const data = await res.json(); 
+// The backend returns { user: { name: "meghu", ... } }
+
+if (data.user && data.user.name) {
+    document.getElementById('username').innerText = data.user.name;
+    
+    // This part fixes the "data not saved" look on refresh
+    if (data.user.policySubmissions) {
+        // Map the array of objects into a simple array of keys
+        signedPolicies = data.user.policySubmissions.map(p => p.policyKey);
+        updateSidebarStatus(); // Run your function that checks the UI boxes
+    }
+}
         }
 
         // FIXED: Sidebar Status for all items
