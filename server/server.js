@@ -6,22 +6,19 @@ const cors = require("cors");
 const app = express();
 
 // 🔹 1. FIXED CORS CONFIGURATION
+// This allows your specific Vercel frontend to communicate with this Render backend
 const corsOptions = {
-  origin: ["https://hindmed-employee-login.vercel.app", "http://localhost:3000"],
+  origin: ["https://hindmed-employee-login.vercel.app", "http://localhost:3000"], // Add localhost for local testing
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-  optionsSuccessStatus: 200 
+  credentials: true, // Allow cookies/auth headers if needed
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 };
 
-// Apply CORS to ALL routes. 
-// This automatically handles OPTIONS requests for your defined routes.
 app.use(cors(corsOptions));
 
-// REMOVED: app.options("/*", ...) as it causes PathError in Node 22+
-// If you specifically need to handle preflight for all possible paths, 
-// use the regex-free approach:
-app.options('*', cors(corsOptions)); // If this still fails, delete this line entirely.
+// Handle preflight requests manually for all routes (Extra safety for Render/Vercel)
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
@@ -45,7 +42,7 @@ app.get("/", (req, res) => {
   res.status(200).json({ status: "API is active", env: process.env.NODE_ENV });
 });
 
-// 🔹 5. Error Handling Middleware
+// 🔹 5. Error Handling Middleware (Prevents CORS errors on crashes)
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: "Internal Server Error", error: err.message });
@@ -53,4 +50,4 @@ app.use((err, req, res, next) => {
 
 // 🔹 6. Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));s
