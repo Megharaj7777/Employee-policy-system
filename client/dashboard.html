@@ -117,23 +117,24 @@
     <script src="js/lang.js"></script>
     <script src="js/dashboard.js"></script>
 
-    <script>
-        // 2. HELPER SCRIPT: Manages UI states and Logout
-        document.addEventListener("DOMContentLoaded", () => {
-            // Set username from storage
-            const savedName = localStorage.getItem("employeeName") || "Employee";
-            document.getElementById("username").textContent = savedName;
-        });
+<script>
+    (function() {
+        // Check for token
+        const token = localStorage.getItem("employeeToken");
+        
+        // Debugging: help us see what's happening in the F12 console
+        console.log("Session Check - Token Found:", !!token);
 
-        function logout() {
-            // Clear specific keys to avoid clearing user preferences (like language)
-            localStorage.removeItem("employeeToken");
-            localStorage.removeItem("token");
-            localStorage.removeItem("employeeName");
+        if (!token || token === "undefined") {
+            // Check if we just arrived from the login page (to prevent infinite loops)
+            const justLoggedIn = sessionStorage.getItem("justLoggedIn");
             
-            // Redirect to login
-            window.location.replace("index.html");
+            if (!justLoggedIn) {
+                console.warn("No session. Redirecting...");
+                window.location.replace("index.html"); 
+            }
         }
-    </script>
+    })();
+</script>
 </body>
 </html>
