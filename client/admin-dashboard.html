@@ -107,7 +107,11 @@
 <body>
 
 <script>
-    if (!localStorage.getItem("adminToken")) window.location.href = "admin-login.html";
+    /* 🔹 1. IMPROVED SECURITY GUARD 🔹 */
+    // Only redirect to login if there is no token AND we aren't already trying to logout
+    if (!localStorage.getItem("adminToken")) {
+        window.location.replace("admin-login.html");
+    }
 </script>
 
 <div class="logo-header">
@@ -197,6 +201,7 @@ function filterEmployees() {
 
 // Fetch all employees
 async function fetchEmployees() {
+    if (!token) return; // Don't fetch if token is being cleared
     const loader = document.getElementById("loader");
     const table = document.getElementById("employeeTable");
     const tbody = document.getElementById("tableBody");
@@ -244,7 +249,7 @@ async function fetchEmployees() {
             `;
         });
     } catch (err) {
-        loader.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error connecting to server.`;
+        if(loader) loader.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error connecting to server.`;
     }
 }
 
@@ -288,9 +293,15 @@ async function deleteEmployee(id, btn) {
     } catch (err) { alert("Deletion failed."); }
 }
 
+/* 🔹 2. UPDATED LOGOUT FUNCTION 🔹 */
 function logout() {
+    // Clear storage
     localStorage.removeItem("adminToken");
-    window.location.href = "index.html";
+    
+    // Use .replace instead of .href to prevent user from clicking "Back" 
+    // and hitting the security guard again
+    window.location.replace("index.html");
+    return false; // Prevent any other click events
 }
 
 if (token) fetchEmployees();
