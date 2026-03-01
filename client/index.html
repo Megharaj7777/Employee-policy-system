@@ -196,7 +196,7 @@ async function verifyOTP() {
         if (res.ok) {
             showToast(data.message, "#28a745"); // Shows "Login Successful"
             localStorage.setItem("employeeToken", data.token);
-            setTimeout(() => { window.location.href = "policy.html"; }, 1500);
+            setTimeout(() => { window.location.href = "dashboard.html"; }, 1500);
         } else {
             alert(data.message || "Verification failed");
             verifyBtn.innerText = "Verify & Login";

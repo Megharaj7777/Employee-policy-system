@@ -9,15 +9,21 @@ const sanitizePhone = (phone) => {
   return cleaned.length > 10 ? cleaned.slice(-10) : cleaned;
 };
 
-// Middleware to protect routes
+// =========================
+// 🔒 MIDDLEWARE
+// =========================
 const protect = async (req, res, next) => {
   try {
-    const token = req.headers.authorization;
-    if (!token) return res.status(401).json({ message: "No token provided" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: "No token provided" });
+    
+    // Support both "Bearer <token>" and raw token
+    const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Fetch user and include necessary fields
-    req.user = await User.findById(decoded.id).select("+name +policyStatus +hasSignedPolicy");
+    
+    // Updated selection to match new User model structure
+    req.user = await User.findById(decoded.id).select("+name +policySubmissions");
     
     if (!req.user) return res.status(401).json({ message: "User not found" });
     next();
@@ -63,7 +69,6 @@ router.post("/send-otp", async (req, res) => {
                 }
             );
 
-            // UPDATED MESSAGE
             res.json({ 
                 message: "OTP sent successfully", 
                 displayCode: mcId 
@@ -85,7 +90,6 @@ router.post("/verify-otp", async (req, res) => {
         let { phone, otp, enteredId } = req.body; 
         const cleanPhone = sanitizePhone(phone);
 
-        // Ensure we find the user and have their ID for the token
         const user = await User.findOne({ phone: cleanPhone }).select("+verificationId");
         
         if (!user || user.verificationId !== enteredId) {
@@ -107,7 +111,6 @@ router.post("/verify-otp", async (req, res) => {
 
         if (verifyRes.data && verifyRes.data.responseCode === 200) {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "8h" });
-            // UPDATED MESSAGE
             res.json({ message: "Login Successful", token });
         } else {
             res.status(400).json({ message: verifyRes.data.message || "Invalid OTP" });
@@ -119,7 +122,7 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 // =========================
-// 3️⃣ GET CURRENT USER
+// 3️⃣ GET CURRENT USER (Dashboard Data)
 // =========================
 router.get("/me", protect, async (req, res) => {
     try {
@@ -130,16 +133,38 @@ router.get("/me", protect, async (req, res) => {
 });
 
 // =========================
-// 4️⃣ SUBMIT POLICY
+// 4️⃣ SUBMIT POLICY (Multi-Policy Support)
 // =========================
 router.post("/submit-policy", protect, async (req, res) => {
     try {
-        const { status } = req.body;
-        req.user.hasSignedPolicy = true;
-        req.user.policyStatus = status;
+        const { policyKey, status } = req.body;
+
+        // 1. Validate inputs
+        if (!policyKey || !status) {
+            return res.status(400).json({ message: "Policy key and status are required" });
+        }
+
+        // 2. Check if user already submitted this specific policy
+        // If they did, we update it. If not, we push a new one.
+        const existingIndex = req.user.policySubmissions.findIndex(p => p.policyKey === policyKey);
+
+        if (existingIndex > -1) {
+            req.user.policySubmissions[existingIndex].status = status;
+            req.user.policySubmissions[existingIndex].submittedAt = new Date();
+        } else {
+            req.user.policySubmissions.push({ policyKey, status });
+        }
+
         await req.user.save();
-        res.json({ message: "Policy response recorded successfully" });
+        
+        res.json({ 
+            message: "Record submitted successfully",
+            policy: policyKey,
+            status: status
+        });
+
     } catch (err) {
+        console.error("Policy Submit Error:", err.message);
         res.status(500).json({ message: "Failed to save response" });
     }
 });

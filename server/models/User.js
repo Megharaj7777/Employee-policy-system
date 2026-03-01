@@ -1,5 +1,30 @@
 const mongoose = require("mongoose");
 
+// Define the structure for individual policy responses
+const policyResponseSchema = new mongoose.Schema({
+  policyKey: {
+    type: String,
+    required: true,
+    enum: [
+      "code_of_conduct",
+      "remote_work",
+      "data_privacy",
+      "travel_expense",
+      "anti_harassment",
+      "workplace_safety"
+    ]
+  },
+  status: {
+    type: String,
+    enum: ["agreed", "disagreed"],
+    required: true
+  },
+  submittedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const userSchema = new mongoose.Schema(
   {
     name: { 
@@ -15,8 +40,7 @@ const userSchema = new mongoose.Schema(
       index: true 
     },
 
-    // 🔒 Stores the 4-digit Captcha/OTP Code
-    // 'select: false' ensures this is hidden from normal queries for security
+    // 🔒 Security fields for OTP/Captcha
     verificationId: { 
       type: String, 
       default: null, 
@@ -29,28 +53,28 @@ const userSchema = new mongoose.Schema(
       select: false 
     },
 
-    otpCount: { 
-      type: Number, 
-      default: 0 
-    },
-    
-    otpLastSentDate: { 
-      type: Date, 
-      default: null 
-    },
+    // 📊 New: Multi-Policy Tracking
+    // This replaces the old 'policyStatus' and 'hasSignedPolicy' 
+    // to track every policy individually for the Admin Dashboard.
+    policySubmissions: [policyResponseSchema],
 
-    policyStatus: { 
-      type: String, 
-      enum: ["pending", "agreed", "disagreed"], 
-      default: "pending" 
-    },
-    
-    hasSignedPolicy: { 
-      type: Boolean, 
-      default: false 
+    // Global tracking for legacy support or quick dashboard checks
+    lastActive: {
+      type: Date,
+      default: Date.now
     }
   },
-  { timestamps: true } // Automatically creates 'createdAt' and 'updatedAt'
+  { 
+    timestamps: true,
+    // Ensure virtuals are included when converting to JSON (useful for frontend)
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
+
+// Virtual property to quickly check if a user has signed ANY policy
+userSchema.virtual("hasSignedAny").get(function () {
+  return this.policySubmissions.length > 0;
+});
 
 module.exports = mongoose.model("User", userSchema);

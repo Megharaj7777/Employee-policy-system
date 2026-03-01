@@ -6,12 +6,12 @@ const mongoose = require("mongoose");
 
 const Admin = require("../models/Admin");
 const User = require("../models/User");
-const auth = require("../middleware/auth");
+const auth = require("../middleware/authMiddleware"); // Ensure path matches your project
 
 // 🔹 Utility: Clean phone number
 const sanitizePhone = (phone) => {
   const cleaned = phone.replace(/\D/g, ""); 
-  return cleaned.slice(-10); // Always take the last 10 digits to match employee.js
+  return cleaned.slice(-10); 
 };
 
 // =========================
@@ -30,6 +30,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid Credentials" });
     }
 
+    // Using bcrypt for secure password comparison
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid Credentials" });
@@ -38,11 +39,11 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: admin._id, role: "admin" },
       process.env.JWT_SECRET,
-      { expiresIn: "4h" } // Extended slightly for dashboard usability
+      { expiresIn: "4h" }
     );
 
     res.json({
-      message: "Login Successful",
+      message: "Admin Login Successful",
       token
     });
 
@@ -54,7 +55,7 @@ router.post("/login", async (req, res) => {
 
 
 // =========================
-// 🔹 GET ALL EMPLOYEES (WITH SEARCH)
+// 🔹 GET ALL EMPLOYEES (Multi-Policy View)
 // =========================
 router.get("/employees", auth, async (req, res) => {
   try {
@@ -74,9 +75,9 @@ router.get("/employees", auth, async (req, res) => {
       };
     }
 
-    // Explicitly exclude sensitive OTP fields from the list
+    // UPDATED: Now fetches policySubmissions array instead of single policyStatus
     const users = await User.find(query)
-      .select("name phone hasSignedPolicy policyStatus createdAt")
+      .select("name phone policySubmissions createdAt updatedAt")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -109,20 +110,16 @@ router.post("/create-employee", auth, async (req, res) => {
     name = name.trim();
     phone = sanitizePhone(phone);
 
-    if (phone.length < 10) {
-      return res.status(400).json({ message: "Invalid phone number" });
-    }
-
     const existing = await User.findOne({ phone });
     if (existing) {
       return res.status(400).json({ message: "Employee already exists" });
     }
 
+    // UPDATED: Initializes with an empty policySubmissions array
     const user = new User({
       name,
       phone,
-      hasSignedPolicy: false,
-      policyStatus: "pending"
+      policySubmissions: [] 
     });
 
     await user.save();
@@ -148,7 +145,6 @@ router.delete("/delete-employee/:id", auth, async (req, res) => {
       return res.status(403).json({ message: "Access Denied" });
     }
 
-    // Check if ID is a valid MongoDB ObjectId to prevent crash
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(400).json({ message: "Invalid ID format" });
     }
