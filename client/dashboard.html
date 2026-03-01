@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Portal | Dashboard</title>
+
+    <script>
+        (function() {
+            // Check if token exists in localStorage
+            const token = localStorage.getItem("employeeToken") || localStorage.getItem("token");
+            
+            if (!token) {
+                // If no token, redirect to login immediately
+                console.warn("No session found. Redirecting to login...");
+                window.location.replace("login.html"); 
+            }
+        })();
+    </script>
+
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -96,11 +110,30 @@
             </div>
 
             <div id="content-display" class="content-card" style="display: none;">
-                </div>
+            </div>
         </main>
     </div>
 
     <script src="js/lang.js"></script>
     <script src="js/dashboard.js"></script>
+
+    <script>
+        // 2. HELPER SCRIPT: Manages UI states and Logout
+        document.addEventListener("DOMContentLoaded", () => {
+            // Set username from storage
+            const savedName = localStorage.getItem("employeeName") || "Employee";
+            document.getElementById("username").textContent = savedName;
+        });
+
+        function logout() {
+            // Clear specific keys to avoid clearing user preferences (like language)
+            localStorage.removeItem("employeeToken");
+            localStorage.removeItem("token");
+            localStorage.removeItem("employeeName");
+            
+            // Redirect to login
+            window.location.replace("login.html");
+        }
+    </script>
 </body>
 </html>
