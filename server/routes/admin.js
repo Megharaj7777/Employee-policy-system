@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 
 const Admin = require("../models/Admin");
 const User = require("../models/User");
-const auth = require("../middleware/authMiddleware"); // Ensure path matches your project
+const auth = require("../middleware/auth"); // Ensure path matches your project
 
 // 🔹 Utility: Clean phone number
 const sanitizePhone = (phone) => {
