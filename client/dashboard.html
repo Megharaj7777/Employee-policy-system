@@ -5,26 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Portal | Dashboard</title>
 
-    <script>
-        (function() {
-            // Check if token exists in localStorage
-            const token = localStorage.getItem("employeeToken") || localStorage.getItem("token");
-            
-            if (!token) {
-                // If no token, redirect to login immediately
-                console.warn("No session found. Redirecting to login...");
-                window.location.replace("login.html"); 
-            }
-        })();
-    </script>
-
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
     <div class="logo-header">
-        <svg width="180" height="37" viewBox="0 0 180 37" fill="none" xmlns="http://www.w3.org/2000/svg">       
+        <svg width="180" height="37" viewBox="0 0 180 37" fill="none" xmlns="http://www.w3.org/2000/svg">      
              <g>
                 <path d="M0 15.2309V0.626219C0 0.275961 0.275278 0 0.624669 0H8.036C10.8841 0 13.1922 2.31383 13.1922 5.16896V15.2309C13.1922 15.5812 12.9169 15.8571 12.5675 15.8571H0.624669C0.275278 15.8571 0 15.5812 0 15.2309Z" fill="#B71530"/>
                 <path d="M0 21.7693V36.374C0 36.7242 0.275278 37.0002 0.624669 37.0002H8.036C10.8841 37.0002 13.1922 34.6864 13.1922 31.8312V21.7693C13.1922 21.419 12.9169 21.1431 12.5675 21.1431H0.624669C0.275278 21.1431 0 21.419 0 21.7693Z" fill="#B71530"/>
@@ -104,37 +91,228 @@
             <div id="welcome-screen" class="content-card">
                 <h1 data-i18n="welcome_header">Welcome to the Portal</h1>
                 <p data-i18n="instruction">Please select a policy from the sidebar to review and submit your response.</p>
-                <div class="welcome-image">
-                    <i class="fas fa-user-shield fa-5x" style="color: #eee; margin-top: 20px;"></i>
-                </div>
             </div>
-
-            <div id="content-display" class="content-card" style="display: none;">
-            </div>
+            <div id="content-display" class="content-card" style="display: none;"></div>
         </main>
     </div>
 
-    <script src="js/lang.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script>
+        // 1. Translation Data (Old lang.js)
+        const i18n = {
+            en: {
+                welcome: "Welcome",
+                logout: "Logout",
+                policies: "Policies",
+                banding: "Banding",
+                holidays: "Holidays",
+                leaves: "Leaves",
+                agree: "Agree",
+                disagree: "Disagree",
+                submit: "Submit Policy",
+                success_msg: "Record submitted successfully!",
+                portal_title: "Employee Dashboard",
+                welcome_header: "Welcome to the Portal",
+                instruction: "Please select a policy from the sidebar to review and submit your response.",
+                // Titles
+                code_of_conduct: "Code of Conduct Policy",
+                remote_work: "Remote Work Policy",
+                data_privacy: "Data Privacy Policy",
+                travel_expense: "Travel and Expense Policy",
+                anti_harassment: "Anti-Harassment Policy",
+                workplace_safety: "Workplace Safety Policy",
+                // Content
+                code_of_conduct_content: "Employees are expected to maintain the highest standards of integrity...",
+                remote_work_content: "Remote work is subject to manager approval and performance metrics...",
+                data_privacy_content: "We value employee data. Personal information is stored securely...",
+                travel_expense_content: "All business travel must be booked 14 days in advance...",
+                anti_harassment_content: "The company has zero tolerance for workplace harassment...",
+                workplace_safety_content: "Safety protocols must be followed at all times in the office...",
+                banding_content: "Our banding structure: Junior, Associate, Senior, Manager, Director.",
+                holidays_content: "Annual Holidays: New Year, Republic Day, Independence Day, Diwali.",
+                leaves_content: "Employees are entitled to Privilege Leave, Sick Leave, and Casual Leave."
+            },
+            kn: {
+                welcome: "ಸ್ವಾಗತ",
+                logout: "ನಿರ್ಗಮಿಸಿ",
+                policies: "ನೀತಿಗಳು",
+                banding: "ಬ್ಯಾಂಡಿಂಗ್",
+                holidays: "ರಜಾದಿನಗಳು",
+                leaves: "ರಜೆಗಳು",
+                agree: "ಒಪ್ಪುತ್ತೇನೆ",
+                disagree: "ಒಪ್ಪುವುದಿಲ್ಲ",
+                submit: "ಸಲ್ಲಿಸಿ",
+                success_msg: "ದಾಖಲೆಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ!",
+                portal_title: "ಉದ್ಯೋಗಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+                welcome_header: "ಪೋರ್ಟಲ್‌ಗೆ ಸ್ವಾಗತ",
+                instruction: "ಪರಿಶೀಲಿಸಲು ಮತ್ತು ಸಲ್ಲಿಸಲು ದಯವಿಟ್ಟು ಸೈಡ್‌ಬಾರ್‌ನಿಂದ ನೀತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+                // Titles
+                code_of_conduct: "ನಡವಳಿಕೆಯ ಸಂಹಿತೆ ನೀತಿ",
+                remote_work: "ದೂರಸ್ಥ ಕೆಲಸದ ನೀತಿ",
+                data_privacy: "ದತ್ತಾಂಶ ಗೌಪ್ಯತೆ ನೀತಿ",
+                travel_expense: "ಪ್ರಯಾಣ ಮತ್ತು ವೆಚ್ಚದ ನೀತಿ",
+                anti_harassment: "ಕಿರುಕುಳ ವಿರೋಧಿ ನೀತಿ",
+                workplace_safety: "ಕೆಲಸದ ಸ್ಥಳದ ಸುರಕ್ಷತೆ",
+                // Content
+                code_of_conduct_content: "ಉದ್ಯೋಗಿಗಳು ಸಮಗ್ರತೆಯ ಉನ್ನತ ಗುಣಮಟ್ಟವನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳುವ ನಿರೀಕ್ಷೆಯಿದೆ...",
+                remote_work_content: "ದೂರಸ್ಥ ಕೆಲಸವು ಮ್ಯಾನೇಜರ್ ಅನುಮೋದನೆಗೆ ಒಳಪಟ್ಟಿರುತ್ತದೆ...",
+                data_privacy_content: "ನಾವು ಉದ್ಯೋಗಿ ದತ್ತಾಂಶವನ್ನು ಗೌರವಿಸುತ್ತೇವೆ. ಮಾಹಿತಿ ಸುರಕ್ಷಿತವಾಗಿರುತ್ತದೆ...",
+                travel_expense_content: "ಎಲ್ಲಾ ವ್ಯವಹಾರ ಪ್ರವಾಸಗಳನ್ನು 14 ದಿನಗಳ ಮುಂಚಿತವಾಗಿ ಕಾಯ್ದಿರಿಸಬೇಕು...",
+                anti_harassment_content: "ಕೆಲಸದ ಸ್ಥಳದಲ್ಲಿ ಕಿರುಕುಳಕ್ಕೆ ಕಂಪನಿಯು ಶೂನ್ಯ ಸಹಿಷ್ಣುತೆಯನ್ನು ಹೊಂದಿದೆ...",
+                workplace_safety_content: "ಕಚೇರಿಯಲ್ಲಿ ಎಲ್ಲಾ ಸಮಯದಲ್ಲೂ ಸುರಕ್ಷತಾ ನಿಯಮಗಳನ್ನು ಪಾಲಿಸಬೇಕು...",
+                banding_content: "ಬ್ಯಾಂಡಿಂಗ್ ಹಂತಗಳು: ಜೂನಿಯರ್, ಅಸೋಸಿಯೇಟ್, ಸೀನಿಯರ್, ಮ್ಯಾನೇಜರ್.",
+                holidays_content: "ವಾರ್ಷಿಕ ರಜಾದಿನಗಳು: ಹೊಸ ವರ್ಷ, ಗಣರಾಜ್ಯೋತ್ಸವ, ಸ್ವಾತಂತ್ರ್ಯ ದಿನಾಚರಣೆ, ದೀಪಾವಳಿ.",
+                leaves_content: "ಉದ್ಯೋಗಿಗಳು ಸವಲತ್ತು ರಜೆ, ಅನಾರೋಗ್ಯ ರಜೆ ಮತ್ತು ಸಾಂದರ್ಭಿಕ ರಜೆಗೆ ಅರ್ಹರಾಗಿರುತ್ತಾರೆ."
+            }
+        };
 
-<script>
-    (function() {
-        // Check for token
-        const token = localStorage.getItem("employeeToken");
-        
-        // Debugging: help us see what's happening in the F12 console
-        console.log("Session Check - Token Found:", !!token);
+        // 2. Dashboard Logic (Old dashboard.js)
+        let currentLang = localStorage.getItem('lang') || 'en';
+        let currentActiveKey = '';
+        let signedPolicies = []; 
 
-        if (!token || token === "undefined") {
-            // Check if we just arrived from the login page (to prevent infinite loops)
-            const justLoggedIn = sessionStorage.getItem("justLoggedIn");
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
             
-            if (!justLoggedIn) {
-                console.warn("No session. Redirecting...");
-                window.location.replace("index.html"); 
+            // Security Check
+            if (!token || token === "undefined") {
+                window.location.replace("index.html");
+                return;
+            }
+
+            // Decode Name
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(window.atob(base64));
+                const userEl = document.getElementById('username');
+                if(userEl) userEl.innerText = payload.name || "User";
+            } catch (e) { 
+                console.error("Token decoding failed", e);
+            }
+
+            // Sidebar Toggle
+            const menuBtn = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            if(menuBtn) {
+                menuBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                });
+            }
+
+            await fetchUserStatus();
+            applyLanguage();
+        });
+
+        async function fetchUserStatus() {
+            try {
+                const res = await fetch('https://employee-policy-system.onrender.com/api/employee/status', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (res.status === 401) return logout();
+                
+                const data = await res.json();
+                signedPolicies = data.policySubmissions.map(p => p.policyKey);
+                updateSidebarStatus();
+            } catch (err) {
+                console.error("Status fetch failed", err);
             }
         }
-    })();
-</script>
+
+        function updateSidebarStatus() {
+            document.querySelectorAll('#policy-submenu li, .nav-item').forEach(li => {
+                const attr = li.getAttribute('onclick');
+                if(!attr) return;
+                const match = attr.match(/'([^']+)'/);
+                if(!match) return;
+                const key = match[1];
+                
+                if (signedPolicies.includes(key)) {
+                    li.classList.add('is-signed');
+                    const link = li.querySelector('a') || li.querySelector('span');
+                    if(link && !link.innerHTML.includes('fa-check-circle')) {
+                        link.innerHTML = `<i class="fas fa-check-circle"></i> ${i18n[currentLang][key] || key}`;
+                    }
+                }
+            });
+        }
+
+        function loadContent(key) {
+            currentActiveKey = key;
+            const display = document.getElementById('content-display');
+            const welcome = document.getElementById('welcome-screen');
+            
+            welcome.style.display = 'none';
+            display.style.display = 'block';
+
+            const isSigned = signedPolicies.includes(key);
+            const title = i18n[currentLang][key] || key;
+            const content = i18n[currentLang][`${key}_content`] || "Content coming soon...";
+
+            display.innerHTML = `
+                <h2 class="policy-title">${title}</h2>
+                <div class="policy-text-box">${content}</div>
+                ${isSigned ? 
+                    `<div class="signed-badge"><i class="fas fa-check-circle"></i> ${i18n[currentLang].success_msg}</div>` : 
+                    `<div class="submission-controls">
+                        <p><strong>${currentLang === 'en' ? 'Do you agree to this?' : 'ನೀವು ಇದನ್ನು ಒಪ್ಪುತ್ತೀರಾ?'}</strong></p>
+                        <div class="radio-group">
+                            <label><input type="radio" name="p-status" value="agreed"> ${i18n[currentLang].agree}</label>
+                            <label><input type="radio" name="p-status" value="disagreed"> ${i18n[currentLang].disagree}</label>
+                        </div>
+                        <button class="btn-submit" onclick="handlePolicySubmit('${key}')">${i18n[currentLang].submit}</button>
+                    </div>`
+                }
+            `;
+            if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('active');
+        }
+
+        async function handlePolicySubmit(policyKey) {
+            const status = document.querySelector('input[name="p-status"]:checked')?.value;
+            if (!status) return alert(currentLang === 'en' ? "Please select an option." : "ದಯವಿಟ್ಟು ಒಂದು ಆಯ್ಕೆಯನ್ನು ಆರಿಸಿ.");
+
+            try {
+                const res = await fetch('https://employee-policy-system.onrender.com/api/employee/submit-policy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ policyKey, status })
+                });
+
+                if (res.ok) {
+                    alert(i18n[currentLang].success_msg);
+                    signedPolicies.push(policyKey);
+                    updateSidebarStatus();
+                    loadContent(policyKey);
+                }
+            } catch (err) { alert("Error submitting."); }
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'kn' : 'en';
+            localStorage.setItem('lang', currentLang);
+            applyLanguage();
+            if (currentActiveKey) loadContent(currentActiveKey);
+            updateSidebarStatus();
+        }
+
+        function applyLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang][key]) el.innerText = i18n[currentLang][key];
+            });
+            document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'ಕನ್ನಡ' : 'English';
+        }
+
+        function toggleSubmenu() {
+            document.getElementById('policy-submenu').classList.toggle('open');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.replace("index.html");
+        }
+    </script>
 </body>
 </html>
