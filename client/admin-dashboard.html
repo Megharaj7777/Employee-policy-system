@@ -290,7 +290,7 @@ async function deleteEmployee(id, btn) {
 
 function logout() {
     localStorage.removeItem("adminToken");
-    window.location.href = "admin-login.html";
+    window.location.href = "index.html";
 }
 
 if (token) fetchEmployees();
