@@ -5,163 +5,143 @@
     <title>Admin Dashboard | Management Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #4e54c8;
-            --primary-dark: #3f44a3;
-            --accent: #ff4b2b;
-            --bg: #f8f9fc;
-            --white: #ffffff;
-            --text-main: #2d3436;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-        }
-
-        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text-main); }
-        
-        /* Fixed Header */
-        .logo-header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 70px;
-            background: var(--white);
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            z-index: 1000;
-        }
-
-        .logo-header svg { width: 140px; }
-
-        .navbar { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            padding: 100px 20px 40px; 
-            color: white; 
-            text-align: center; 
-        }
-
-        .navbar h1 { margin: 0; font-size: 24px; font-weight: 700; }
-
-        .container { padding: 20px; max-width: 1200px; margin: -30px auto 0; position: relative; z-index: 10; }
-        
-        /* Cards */
-        .card { 
-            background: var(--white); 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
-            margin-bottom: 25px; 
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-        
-        h3 { margin-top: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; color: var(--primary); }
-
-        /* Inputs & Buttons */
-        .input-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
-        input { 
-            flex: 1; min-width: 200px; padding: 12px 15px; 
-            border: 1px solid #e2e8f0; border-radius: 8px; 
-            font-size: 15px; transition: border 0.2s;
-        }
-        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(78, 84, 200, 0.1); }
-        
-        button { 
-            padding: 12px 24px; border: none; border-radius: 8px; 
-            background: var(--primary); color: white; cursor: pointer; 
-            font-weight: 600; transition: 0.3s; 
-        }
-        button:hover { background: var(--primary-dark); transform: translateY(-1px); }
-
-        /* Table Styles */
-        .table-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; padding: 15px; }
-        td { padding: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-        
-        /* Status Badges */
-        .status-badge { 
-            padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; 
-            display: inline-flex; align-items: center; gap: 4px; margin: 2px;
-        }
-        .signed { background: #dcfce7; color: #166534; }
-        .disagreed { background: #fee2e2; color: #991b1b; } 
-        .pending { background: #fef3c7; color: #92400e; }
-
-        .btn-delete { 
-            background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e;
-            padding: 6px 12px; font-size: 12px; 
-        }
-        .btn-delete:hover { background: #cf1322; color: white; }
-
-        .logout-btn { background: #475569; margin-top: 10px; display: block; width: 100%; }
-
-        @media (min-width: 768px) {
-            .navbar { text-align: left; padding: 100px 60px 60px; }
-            .logout-btn { width: auto; position: absolute; top: 15px; right: 20px; z-index: 1001; margin: 0; }
-            .input-group { flex-direction: row; }
-        }
-
-        /* Admin Mobile & Tablet Adjustments */
-@media (max-width: 992px) {
+<style>
     :root {
-        --sidebar-width: 260px;
+        --primary: #4e54c8;
+        --primary-dark: #3f44a3;
+        --accent: #ff4b2b;
+        --bg: #f8f9fc;
+        --white: #ffffff;
+        --text-main: #2d3436;
+        --success: #27ae60;
+        --danger: #e74c3c;
+        --warning: #f39c12;
     }
 
-    /* 1. Stack the Stats Cards (Total Users, Signed, etc.) */
-    .stats-grid {
-        grid-template-columns: 1fr !important; /* Force cards to stack vertically */
-        gap: 15px;
-    }
-
-    /* 2. Sidebar Slide-in Logic */
-    #sidebar {
+    body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text-main); }
+    
+    /* Fixed Header */
+    .logo-header {
         position: fixed;
-        left: -260px;
-        height: 100vh;
-        z-index: 1001;
-        box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+        top: 0; left: 0; right: 0;
+        height: 70px;
+        background: var(--white);
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* Pushes logo left and button right */
+        padding: 0 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        z-index: 1000;
     }
 
-    #sidebar.active {
-        left: 0;
+    .logo-header svg { width: 140px; }
+
+    .navbar { 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        padding: 100px 20px 40px; 
+        color: white; 
+        text-align: center; 
     }
 
-    #main-content {
-        margin-left: 0 !important;
-        width: 100%;
-        padding: 15px;
-    }
+    .navbar h1 { margin: 0; font-size: 24px; font-weight: 700; }
 
-    /* 3. The "Table Fix" - Allow horizontal scrolling for big data */
-    .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        background: white;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-
-    table {
-        min-width: 600px; /* Ensures table doesn't get squashed unreadably */
-    }
-
-    /* 4. Topbar Layout */
-    .topbar {
-        padding: 0 15px;
+    .container { padding: 20px; max-width: 1200px; margin: -30px auto 0; position: relative; z-index: 10; }
+    
+    /* Cards */
+    .card { 
+        background: var(--white); 
+        padding: 25px; 
+        border-radius: 12px; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+        margin-bottom: 25px; 
+        border: 1px solid rgba(0,0,0,0.05);
     }
     
-    .admin-title {
-        display: none; /* Hide 'Admin Panel' text on very small screens */
+    h3 { margin-top: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; color: var(--primary); }
+
+    /* Inputs & Buttons */
+    .input-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
+    input { 
+        flex: 1; min-width: 200px; padding: 12px 15px; 
+        border: 1px solid #e2e8f0; border-radius: 8px; 
+        font-size: 15px; transition: border 0.2s;
     }
-.logout-btn:active {
-        transform: scale(0.95); /* Visual feedback when tapped */
-        background:#475569;    /* Slightly darker red on tap */
-        padding: 6px 12px; font-size: 12px;
+    input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(78, 84, 200, 0.1); }
+    
+    button { 
+        padding: 12px 24px; border: none; border-radius: 8px; 
+        background: var(--primary); color: white; cursor: pointer; 
+        font-weight: 600; transition: 0.3s; 
     }
-}
-    </style>
+    button:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+    /* Table Styles */
+    .table-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+    th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; padding: 15px; }
+    td { padding: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    
+    /* Status Badges */
+    .status-badge { 
+        padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; 
+        display: inline-flex; align-items: center; gap: 4px; margin: 2px;
+    }
+    .signed { background: #dcfce7; color: #166534; }
+    .disagreed { background: #fee2e2; color: #991b1b; } 
+    .pending { background: #fef3c7; color: #92400e; }
+
+    .btn-delete { 
+        background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e;
+        padding: 6px 12px; font-size: 12px; 
+    }
+    .btn-delete:hover { background: #cf1322; color: white; }
+
+    /* Default Logout Button */
+    .logout-btn { 
+        background: #475569; 
+        color: white;
+        font-size: 14px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: auto;
+        margin: 0;
+    }
+
+    @media (min-width: 768px) {
+        .navbar { text-align: left; padding: 100px 60px 60px; }
+        .input-group { flex-direction: row; }
+    }
+
+    /* Mobile Adjustments */
+    @media (max-width: 768px) {
+        .logo-header { height: 60px; padding: 0 15px; }
+        .logo-header svg { width: 110px; }
+        
+        /* Fix for big logout button on mobile */
+        .logout-btn { 
+            padding: 8px 12px; 
+            font-size: 12px;
+            margin-top: 0; /* Prevents it from jumping down */
+        }
+        
+        /* Optional: Hide text and only show icon on very small screens */
+        @media (max-width: 400px) {
+            .logout-btn span { display: none; }
+            .logout-btn { padding: 8px; }
+        }
+
+        .navbar { padding: 90px 20px 30px; }
+        .navbar h1 { font-size: 20px; }
+        
+        .input-group { flex-direction: column; }
+        button { width: 100%; }
+        
+        .table-wrapper table { min-width: 600px; }
+    }
+</style>
 </head>
 <body>
 
