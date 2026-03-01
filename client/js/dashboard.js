@@ -4,14 +4,24 @@ let signedPolicies = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
-    if (!token) return window.location.href = "index.html";
+    
+    // If no token, go to login
+    if (!token || token === "undefined") {
+        window.location.replace("index.html");
+        return;
+    }
 
     // 1. Get Name from Token
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        document.getElementById('username').innerText = payload.name || "User";
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
+        
+        // Update the UI with the name from the token
+        const userEl = document.getElementById('username');
+        if(userEl) userEl.innerText = payload.name || "User";
     } catch (e) { 
-        console.error("Token error"); 
+        console.error("Token decoding failed", e);
     }
 
     // 2. Setup Sidebar Toggle

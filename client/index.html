@@ -195,7 +195,7 @@ async function verifyOTP() {
         
         if (res.ok && data.token) {
             // FIX: Ensure token is set before redirecting
-            localStorage.setItem("employeeToken", data.token);
+            localStorage.setItem("token", data.token);
             
             // Double-check storage before redirect
             if(localStorage.getItem("employeeToken")) {
