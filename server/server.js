@@ -14,10 +14,14 @@ const corsOptions = {
   optionsSuccessStatus: 200 
 };
 
+// Apply CORS to ALL routes. 
+// This automatically handles OPTIONS requests for your defined routes.
 app.use(cors(corsOptions));
 
-// FIXED: Changed "*" to "/*" to support newer Express/Path-to-Regexp versions
-app.options("/*", cors(corsOptions));
+// REMOVED: app.options("/*", ...) as it causes PathError in Node 22+
+// If you specifically need to handle preflight for all possible paths, 
+// use the regex-free approach:
+app.options('*', cors(corsOptions)); // If this still fails, delete this line entirely.
 
 app.use(express.json());
 
