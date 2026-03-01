@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <title>Employee Policy System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; justify-content: center; align-items: center; height: 100vh; }
     .container { background: white; padding: 40px; border-radius: 15px; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative; }
@@ -35,6 +35,53 @@
     #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
     @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
     @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+    /* RESPONSIVE MEDIA QUERIES */
+    @media (max-width: 480px) {
+        body {
+            align-items: flex-start; /* Better for long forms on small screens */
+            padding-top: 100px; 
+            height: auto;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%; /* Use percentage instead of fixed pixels */
+            padding: 25px 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo-header {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%); /* Center the logo horizontally on mobile */
+            width: auto;
+            padding: 8px 12px;
+        }
+
+        .logo-header svg {
+            width: 120px; /* Scale down logo for small screens */
+        }
+
+        h2 {
+            font-size: 20px;
+        }
+
+        input, button {
+            padding: 14px; /* Larger touch targets for fingers */
+            font-size: 16px; /* Prevents iOS auto-zoom on focus */
+        }
+    }
+
+    /* Landscape mode / Small height fix */
+    @media (max-height: 600px) {
+        body {
+            align-items: flex-start;
+            padding: 80px 0 20px;
+            height: auto;
+        }
+    }
   </style>
 </head>
 <body>

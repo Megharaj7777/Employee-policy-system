@@ -160,3 +160,78 @@ body {
     #main-content { margin-left: var(--sidebar-width); }
     #menu-toggle { display: none; }
 }
+
+/* Mobile & Tablet Adjustments */
+@media (max-width: 767px) {
+    :root {
+        --sidebar-width: 280px; /* Slightly wider for easier tapping on mobile */
+    }
+
+    /* 1. Adjust the Logo Header */
+    .logo-header {
+        justify-content: center; /* Center logo on mobile */
+        padding: 10px;
+    }
+    .logo-header svg {
+        width: 130px; /* Scale down the logo */
+        height: auto;
+    }
+
+    /* 2. Topbar adjustments */
+    .topbar {
+        padding: 0 10px;
+        font-size: 14px;
+    }
+
+    .topbar-center {
+        display: none; /* Hide 'Welcome User' to save space on small phones */
+    }
+
+    .topbar-right {
+        display: flex;
+        gap: 8px;
+    }
+
+    /* 3. Sidebar sliding behavior */
+    #sidebar {
+        height: 100vh; /* Full height on mobile */
+        top: 0;
+        left: -280px; /* Hide off-screen */
+        box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+        padding-top: 20px;
+    }
+
+    #sidebar.active {
+        left: 0; /* Slide in */
+    }
+
+    /* 4. Main Content Spacing */
+    #main-content {
+        margin-left: 0 !important;
+        padding: 15px;
+        width: 100%;
+    }
+
+    .content-card {
+        padding: 20px;
+        width: 100%;
+        border-radius: 8px;
+    }
+
+    /* 5. Policy Text & Radio Buttons */
+    .policy-text-box {
+        max-height: none; /* Let it expand so user doesn't have a 'scroll-within-a-scroll' */
+        font-size: 15px;
+        padding: 15px;
+    }
+
+    .radio-group {
+        flex-direction: column; /* Stack Agree/Disagree vertically on tiny phones */
+        gap: 10px;
+    }
+
+    .btn-submit {
+        width: 100%; /* Make button big and easy to tap */
+        padding: 15px;
+    }
+}
