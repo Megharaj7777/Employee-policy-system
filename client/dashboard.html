@@ -32,6 +32,9 @@
     <div class="container-flex">
         <nav id="sidebar">
             <ul class="nav-list">
+                <li class="nav-item top-level-nav" onclick="goHome()">
+                    <div class="nav-link"><i class="fas fa-home"></i> <span data-i18n="home">Home</span></div>
+                </li>
                 <li class="nav-item">
                     <div class="nav-link" onclick="toggleSubmenu()">
                         <i class="fas fa-file-signature"></i> 
@@ -71,8 +74,8 @@
     <script>
         const i18n = {
             en: {
-                welcome: "Welcome", logout: "Logout", policies: "Policies", banding: "Banding", holidays: "Holidays", leaves: "Leaves",
-                agree: "Agree", disagree: "Disagree", submit: "Submit Acknowledgement", success_msg: "Submitted successfully!",
+                home: "Home", welcome: "Welcome", logout: "Logout", policies: "Policies", banding: "Banding", holidays: "Holidays", leaves: "Leaves",
+                agree: "I agree", submit: "Submit Acknowledgement", success_msg: "Submitted successfully!",
                 portal_title: "Employee Dashboard", welcome_header: "Welcome to the Portal", instruction: "Please select an item from the sidebar.",
                 code_of_conduct: "Code of Conduct Policy", remote_work: "Remote Work Policy", data_privacy: "Data Privacy Policy",
                 travel_expense: "Travel and Expense Policy", anti_harassment: "Anti-Harassment Policy", workplace_safety: "Workplace Safety Policy",
@@ -81,17 +84,19 @@
                 anti_harassment_content: "Zero tolerance...", workplace_safety_content: "Follow protocols...",
                 banding_content: "Junior, Associate, Senior, Manager, Director.",
                 holidays_content: "New Year, Republic Day, Independence Day, Diwali.",
-                leaves_content: "Privilege, Sick, and Casual Leave."
+                leaves_content: "Privilege, Sick, and Casual Leave.",
+                ack_text: "I hereby acknowledge that I have received, read, and understand the "
             },
             kn: {
-                welcome: "ಸ್ವಾಗತ", logout: "ನಿರ್ಗಮಿಸಿ", policies: "ನೀತಿಗಳು", banding: "ಬ್ಯಾಂಡಿಂಗ್", holidays: "ರಜಾದಿನಗಳು", leaves: "ರಜೆಗಳು",
-                agree: "ಒಪ್ಪುತ್ತೇನೆ", disagree: "ಒಪ್ಪುವುದಿಲ್ಲ", submit: "ಸಲ್ಲಿಸಿ", success_msg: "ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ!",
+                home: "ಮುಖಪುಟ", welcome: "ಸ್ವಾಗತ", logout: "ನಿರ್ಗಮಿಸಿ", policies: "ನೀತಿಗಳು", banding: "ಬ್ಯಾಂಡಿಂಗ್", holidays: "ರಜಾದಿನಗಳು", leaves: "ರಜೆಗಳು",
+                agree: "ನಾನು ಒಪ್ಪುತ್ತೇನೆ", submit: "ಸಲ್ಲಿಸಿ", success_msg: "ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ!",
                 portal_title: "ಉದ್ಯೋಗಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್", welcome_header: "ಪೋರ್ಟಲ್‌ಗೆ ಸ್ವಾಗತ", instruction: "ದಯವಿಟ್ಟು ಆಯ್ಕೆಮಾಡಿ.",
                 code_of_conduct: "ನಡವಳಿಕೆಯ ಸಂಹಿತೆ", remote_work: "ರಿಮೋಟ್ ಕೆಲಸದ ನೀತಿ", data_privacy: "ಡೇಟಾ ಗೌಪ್ಯತೆ",
                 travel_expense: "ಪ್ರಯಾಣ ಮತ್ತು ವೆಚ್ಚದ ನೀತಿ", anti_harassment: "ಕಿರುಕುಳ ವಿರೋಧಿ ನೀತಿ", workplace_safety: "ಕಾರ್ಯಸ್ಥಳದ ಸುರಕ್ಷತೆ",
                 banding_content: "ಹಂತಗಳು: ಜೂನಿಯರ್, ಅಸೋಸಿಯೇಟ್, ಮ್ಯಾನೇಜರ್.",
                 holidays_content: "ರಜಾದಿನಗಳು: ಹೊಸ ವರ್ಷ, ಗಣರಾಜ್ಯೋತ್ಸವ, ದೀಪಾವಳಿ.",
-                leaves_content: "ಸವಲತ್ತು, ಅನಾರೋಗ್ಯ ಮತ್ತು ಸಾಂದರ್ಭಿಕ ರಜೆಗಳು."
+                leaves_content: "ಸವಲತ್ತು, ಅನಾರೋಗ್ಯ ಮತ್ತು ಸಾಂದರ್ಭಿಕ ರಜೆಗಳು.",
+                ack_text: "ನಾನು ಈ ಮೂಲಕ ಸ್ವೀಕರಿಸಿದ್ದೇನೆ, ಓದಿದ್ದೇನೆ ಮತ್ತು ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇನೆ ಎಂದು ಒಪ್ಪಿಕೊಳ್ಳುತ್ತೇನೆ "
             }
         };
 
@@ -106,7 +111,6 @@
                 return;
             }
 
-            // Menu toggle listener
             const menuBtn = document.getElementById('menu-toggle');
             if(menuBtn) {
                 menuBtn.addEventListener('click', () => {
@@ -114,36 +118,33 @@
                 });
             }
 
-            await fetchUserStatus(); // Fetches name AND signed status from DB
+            await fetchUserStatus();
             applyLanguage();
         });
+
+        function goHome() {
+            currentActiveKey = '';
+            document.getElementById('content-display').style.display = 'none';
+            document.getElementById('welcome-screen').style.display = 'block';
+            if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('active');
+        }
 
         async function fetchUserStatus() {
             const token = localStorage.getItem('token');
             try {
-                // FIXED: Changed endpoint to /me to match server.js
                 const res = await fetch('https://employee-policy-system.onrender.com/api/employee/me', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-
                 if (!res.ok) throw new Error("Fetch failed");
-
                 const data = await res.json(); 
-                console.log("User data fetched:", data);
-
                 if (data.user) {
-                    // 1. SET USERNAME FROM DB
                     document.getElementById('username').innerText = data.user.name || "User";
-                    
-                    // 2. SET SIGNED POLICIES FROM DB ARRAY
                     if (data.user.policySubmissions) {
                         signedPolicies = data.user.policySubmissions.map(p => p.policyKey);
                         updateSidebarStatus(); 
                     }
                 }
-            } catch (err) {
-                console.error("Status fetch error:", err);
-            }
+            } catch (err) { console.error("Status fetch error:", err); }
         }
 
         function updateSidebarStatus() {
@@ -153,12 +154,10 @@
                 const match = attr.match(/'([^']+)'/);
                 if(!match) return;
                 const key = match[1];
-                
                 if (signedPolicies.includes(key)) {
                     li.classList.add('is-signed');
                     const textSpan = li.querySelector('[data-i18n]');
                     if(textSpan) {
-                        // Ensure checkmark icon is added
                         const translation = i18n[currentLang][key] || key;
                         textSpan.innerHTML = `<i class="fas fa-check-circle" style="color:#27ae60"></i> ${translation}`;
                     }
@@ -176,6 +175,7 @@
             const isSigned = signedPolicies.includes(key);
             const title = i18n[currentLang][key] || key;
             const content = i18n[currentLang][`${key}_content`] || "Information coming soon...";
+            const ackStatement = i18n[currentLang].ack_text + "<strong>" + title + "</strong>" + (currentLang === 'en' ? " and agree to abide by its terms." : " ಮತ್ತು ಅದರ ನಿಯಮಗಳಿಗೆ ಬದ್ಧರಾಗಿರಲು ಒಪ್ಪುತ್ತೇನೆ.");
 
             display.innerHTML = `
                 <h2 class="policy-title">${title}</h2>
@@ -183,10 +183,9 @@
                 ${isSigned ? 
                     `<div class="signed-badge" style="color:green; padding:20px; font-weight:bold;"><i class="fas fa-check-circle"></i> ${i18n[currentLang].success_msg}</div>` : 
                     `<div class="submission-controls" style="margin-top:20px; border-top:1px solid #eee; padding-top:20px;">
-                        <p><strong>Acknowledgement:</strong></p>
+                        <p style="font-size: 15px; line-height: 1.5; margin-bottom: 15px;">${ackStatement}</p>
                         <div class="radio-group" style="margin: 15px 0;">
-                            <label><input type="radio" name="p-status" value="agreed"> ${i18n[currentLang].agree}</label>
-                            <label style="margin-left:15px;"><input type="radio" name="p-status" value="disagreed"> ${i18n[currentLang].disagree}</label>
+                            <label style="cursor:pointer;"><input type="checkbox" id="agree-check"> ${i18n[currentLang].agree}</label>
                         </div>
                         <button class="btn-submit" onclick="handlePolicySubmit('${key}')" style="background:#022D5B; color:white; padding:10px 25px; border:none; cursor:pointer; border-radius:4px;">
                             ${i18n[currentLang].submit}
@@ -198,8 +197,8 @@
         }
 
         async function handlePolicySubmit(policyKey) {
-            const status = document.querySelector('input[name="p-status"]:checked')?.value;
-            if (!status) return alert(currentLang === 'en' ? "Please select an option." : "ದಯವಿಟ್ಟು ಒಂದು ಆಯ್ಕೆಯನ್ನು ಆರಿಸಿ.");
+            const isChecked = document.getElementById('agree-check').checked;
+            if (!isChecked) return alert(currentLang === 'en' ? "Please check the agreement box." : "ದಯವಿಟ್ಟು ಒಪ್ಪಂದದ ಪೆಟ್ಟಿಗೆಯನ್ನು ಗುರುತಿಸಿ.");
 
             try {
                 const res = await fetch('https://employee-policy-system.onrender.com/api/employee/submit-policy', {
@@ -208,7 +207,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
-                    body: JSON.stringify({ policyKey, status })
+                    body: JSON.stringify({ policyKey, status: 'agreed' })
                 });
 
                 if (res.ok) {
