@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login | Medical Policy Portal</title>
+    <title>Login | Hindmed Policy Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -13,6 +13,7 @@
             --bg: #f0f4f8;
             --white: #ffffff;
             --text: #2d3436;
+            --danger: #d63031;
         }
 
         body { 
@@ -23,7 +24,9 @@
             justify-content: center; 
             align-items: center; 
             min-height: 100vh;
-            overflow: hidden;
+            /* Changed overflow to auto to allow scrolling on very short mobile screens */
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* 🧬 Medical Background Elements */
@@ -34,7 +37,6 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Keeps original spirit with medical overlay */
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
         }
 
@@ -58,17 +60,22 @@
             backdrop-filter: blur(10px);
             padding: 40px; 
             border-radius: 24px; 
-            width: 100%;
+            width: 90%; /* Using percentage for responsiveness */
             max-width: 400px; 
             box-shadow: 0 20px 60px rgba(0,0,0,0.2); 
             text-align: center; 
             position: relative;
             border: 1px solid rgba(255,255,255,0.3);
-            margin: 20px;
+            margin: 20px auto;
+            box-sizing: border-box;
         }
 
         .logo-area { margin-bottom: 25px; }
-        .logo-area svg { width: 160px; height: auto; }
+        .logo-area svg { 
+            width: 100%; 
+            max-width: 180px; 
+            height: auto; 
+        }
 
         h2 { color: var(--text); font-weight: 600; margin-bottom: 10px; font-size: 24px; }
         p.subtitle { color: #636e72; font-size: 14px; margin-bottom: 25px; }
@@ -81,7 +88,7 @@
             border: 2px solid #dfe6e9; 
             box-sizing: border-box; 
             outline: none; 
-            font-size: 15px;
+            font-size: 16px; /* 16px prevents iOS zoom on focus */
             transition: 0.3s;
         }
         input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(9, 132, 227, 0.1); }
@@ -99,8 +106,13 @@
             margin-top: 15px; 
             transition: 0.3s;
             box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         button:hover { background: #0873c4; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
         button:disabled { background: #b2bec3; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .toggle-btn { 
@@ -116,8 +128,9 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
+            box-shadow: none;
         }
-        .toggle-btn:hover { color: var(--secondary); }
+        .toggle-btn:hover { color: var(--secondary); background: transparent; transform: none; }
 
         /* 🔐 Security Section */
         #captchaArea { 
@@ -147,14 +160,37 @@
         .hidden { display: none !important; }
 
         #toast {
-            visibility: hidden; min-width: 280px; background-color: #2d3436; color: #fff; text-align: center;
-            border-radius: 12px; padding: 16px; position: fixed; z-index: 1001; left: 50%; bottom: 30px;
-            transform: translateX(-50%); font-size: 14px; font-weight: 500;
+            visibility: hidden; 
+            width: 80%;
+            max-width: 300px;
+            background-color: #2d3436; 
+            color: #fff; 
+            text-align: center;
+            border-radius: 12px; 
+            padding: 16px; 
+            position: fixed; 
+            z-index: 1001; 
+            left: 50%; 
+            bottom: 30px;
+            transform: translateX(-50%); 
+            font-size: 14px; 
+            font-weight: 500;
         }
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         
         @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        /* 📱 Mobile Specific Adjustments */
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                border-radius: 18px;
+            }
+            h2 { font-size: 20px; }
+            input, button { padding: 12px 15px; font-size: 15px; }
+            .floating-icon { display: none; } /* Remove floating icons on mobile for performance */
+        }
     </style>
 </head>
 <body>
@@ -164,7 +200,7 @@
 
 <div class="container">
     <div class="logo-area">
-        <svg width="180" height="37" viewBox="0 0 180 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 180 37" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g>
                 <path d="M0 15.2309V0.626219C0 0.275961 0.275278 0 0.624669 0H8.036C10.8841 0 13.1922 2.31383 13.1922 5.16896V15.2309C13.1922 15.5812 12.9169 15.8571 12.5675 15.8571H0.624669C0.275278 15.8571 0 15.5812 0 15.2309Z" fill="#B71530"/>
                 <path d="M0 21.7693V36.374C0 36.7242 0.275278 37.0002 0.624669 37.0002H8.036C10.8841 37.0002 13.1922 34.6864 13.1922 31.8312V21.7693C13.1922 21.419 12.9169 21.1431 12.5675 21.1431H0.624669C0.275278 21.1431 0 21.419 0 21.7693Z" fill="#B71530"/>
@@ -183,7 +219,7 @@
 
     <div id="employeeSection">
         <h2>Welcome Back</h2>
-        <p class="subtitle">Access the Staff Policy Hub</p>
+        <p class="subtitle">Access for the Employee policy Sign-in</p>
         
         <input type="tel" id="phone" placeholder="Mobile Number (10 digits)">
         
@@ -210,7 +246,7 @@
         </button>
         
         <button class="toggle-btn" onclick="showAdmin()">
-            <i class="fas fa-user-shield"></i> Administrator Login
+            <i class="fas fa-user-shield"></i> Admin Login
         </button>
     </div>
 
@@ -228,7 +264,7 @@
         <p id="adminError" style="color:var(--danger); font-size: 13px; margin-top: 10px;"></p>
         
         <button class="toggle-btn" onclick="showEmployee()">
-            <i class="fas fa-arrow-left"></i> Staff Login
+            <i class="fas fa-arrow-left"></i> Back to Employee Login
         </button>
     </div>
 </div>
@@ -237,6 +273,9 @@
     // --- Medical BG Animation ---
     function createIcons() {
         const bg = document.getElementById('bg');
+        // Only generate icons if screen width is above 480px for better mobile performance
+        if (window.innerWidth <= 480) return;
+
         const icons = ['fa-heartbeat', 'fa-stethoscope', 'fa-pills', 'fa-hospital', 'fa-user-md'];
         for(let i=0; i<15; i++) {
             const icon = document.createElement('i');
@@ -323,6 +362,7 @@
         } catch (err) {
             showToast("Server waking up... try again", "#f39c12");
             otpBtn.disabled = false;
+            otpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Verification Code';
         }
     }
 
@@ -356,6 +396,7 @@
         } catch (err) {
             showToast("System error.", "#d63031");
             verifyBtn.disabled = false;
+            verifyBtn.innerText = "Verify & Access Portal";
         }
     }
 
