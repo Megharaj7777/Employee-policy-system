@@ -10,74 +10,92 @@
             --primary: #022D5B;
             --primary-light: #0a407a;
             --secondary: #B71530;
-            --bg-light: #f0f2f5;
+            --bg-light: #f4f7fa;
             --white: #ffffff;
             --text-main: #2d3436;
             --text-muted: #636e72;
             --success: #00b894;
             --sidebar-width: 280px;
-            --header-height: 70px;
+            --header-height: 75px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --shadow: 0 10px 25px rgba(0,0,0,0.05);
-            --radius: 12px;
+            --shadow: 0 10px 30px rgba(2, 45, 91, 0.08);
+            --radius: 16px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
 
-        body { background-color: var(--bg-light); color: var(--text-main); overflow-x: hidden; }
-
-        /* --- Branding --- */
-        .logo-header { 
-            background: var(--white); 
-            padding: 12px 30px; 
-            display: flex; 
-            align-items: center; 
-            border-bottom: 1px solid #edf2f7;
+        body { 
+            background-color: var(--bg-light); 
+            color: var(--text-main); 
+            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* --- Header --- */
+        /* --- Floating Background Widgets --- */
+        .bg-widgets {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .widget {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(2, 45, 91, 0.03), rgba(183, 21, 48, 0.03));
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+
+        /* --- Layout --- */
         .topbar {
             height: var(--header-height);
             background: var(--white);
-            color: var(--text-main);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            padding: 0 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.04);
             position: sticky;
             top: 0;
             z-index: 1000;
-            border-bottom: 1px solid #edf2f7;
         }
 
         .topbar-left { display: flex; align-items: center; gap: 15px; }
-        .logo-text { font-weight: 700; font-size: 1.2rem; color: var(--primary); letter-spacing: -0.5px; }
+        .logo-box svg { height: 35px; width: auto; }
 
         #menu-toggle {
-            background: var(--bg-light);
+            background: var(--primary);
             border: none;
-            color: var(--primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
+            color: white;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
             cursor: pointer;
             display: none;
             align-items: center;
             justify-content: center;
+            font-size: 1.2rem;
         }
 
-        .topbar-center { font-weight: 500; font-size: 0.95rem; }
-        #username { color: var(--secondary); font-weight: 700; }
+        .topbar-center { font-weight: 500; font-size: 1rem; color: var(--text-muted); }
+        #username { color: var(--secondary); font-weight: 700; border-bottom: 2px solid rgba(183, 21, 48, 0.2); }
 
-        .topbar-right { display: flex; gap: 12px; }
+        .topbar-right { display: flex; gap: 10px; }
         
         .lang-btn, .logout-btn {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            color: var(--text-main);
-            padding: 8px 16px;
-            border-radius: 8px;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
             cursor: pointer;
             transition: var(--transition);
             display: flex;
@@ -87,24 +105,41 @@
             font-size: 0.85rem;
         }
 
-        .lang-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
-        .logout-btn { background: #fff0f0; color: var(--secondary); border: 1px solid #ffe3e3; }
+        .lang-btn { background: #eef2f7; color: var(--primary); }
+        .lang-btn:hover { background: var(--primary); color: white; }
+        .logout-btn { background: #fff0f0; color: var(--secondary); }
         .logout-btn:hover { background: var(--secondary); color: white; }
 
         /* --- Sidebar --- */
-        .container-flex { display: flex; min-height: calc(100vh - 120px); }
+        .container-flex { display: flex; }
 
         #sidebar {
             width: var(--sidebar-width);
             background: var(--primary);
+            height: calc(100vh - var(--header-height));
+            position: sticky;
+            top: var(--header-height);
             transition: var(--transition);
-            flex-shrink: 0;
-            padding: 20px 15px;
-            color: rgba(255,255,255,0.8);
+            padding: 25px 15px;
+            z-index: 1100;
+        }
+
+        .sidebar-close {
+            display: none;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
         }
 
         .nav-list { list-style: none; }
-        .nav-item { margin-bottom: 8px; }
+        .nav-item { margin-bottom: 5px; }
 
         .nav-link {
             padding: 14px 18px;
@@ -113,68 +148,62 @@
             gap: 12px;
             color: rgba(255,255,255,0.7);
             font-weight: 500;
-            border-radius: 10px;
+            border-radius: 12px;
             transition: var(--transition);
             cursor: pointer;
             text-decoration: none;
         }
 
-        .nav-link i { width: 20px; font-size: 1.1rem; }
-        .nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-link i:first-child { width: 22px; font-size: 1.1rem; text-align: center; }
+        .nav-link:hover { background: rgba(255,255,255,0.08); color: white; }
         
-        .nav-item.is-signed .nav-link { 
-            background: rgba(0, 184, 148, 0.15); 
-            color: #55efc4;
-        }
+        .nav-item.is-signed .nav-link { color: #55efc4; }
 
         .arrow { margin-left: auto; font-size: 0.8rem; transition: transform 0.3s; }
         
         .submenu { 
             list-style: none; 
-            overflow: hidden; 
             max-height: 0;
-            transition: max-height 0.4s ease;
-            margin-left: 10px;
-            border-left: 1px solid rgba(255,255,255,0.1);
-            margin-top: 5px;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin: 5px 0;
         }
-        .submenu.open { max-height: 500px; }
+        .submenu.open { max-height: 1000px; transition: max-height 0.4s ease-in; }
         
         .submenu li {
-            padding: 10px 18px 10px 40px;
-            font-size: 0.88rem;
-            border-radius: 8px;
-            margin-bottom: 2px;
+            padding: 12px 18px 12px 45px;
+            font-size: 0.9rem;
+            cursor: pointer;
             transition: var(--transition);
+            color: rgba(255,255,255,0.6);
         }
-        .submenu li a { text-decoration: none; color: rgba(255,255,255,0.6); display: block; }
-        .submenu li:hover { background: rgba(255,255,255,0.05); }
-        .submenu li:hover a { color: white; }
+        .submenu li:hover { color: white; background: rgba(255,255,255,0.05); }
 
         /* --- Main Content --- */
-        #main-content { flex-grow: 1; padding: 30px; }
+        #main-content { flex-grow: 1; padding: 40px; position: relative; }
 
         .content-card {
-            background: var(--white);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
             padding: 40px;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            max-width: 1000px;
+            max-width: 900px;
             margin: 0 auto;
-            animation: slideUp 0.5s ease;
+            border: 1px solid white;
         }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        h1, .policy-title { color: var(--primary); margin-bottom: 24px; font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
+        h1, .policy-title { color: var(--primary); margin-bottom: 25px; font-size: 2.2rem; font-weight: 800; }
         
         .policy-text-box {
             line-height: 1.8;
             color: #4a5568;
-            background: #fdfdfd;
+            background: var(--white);
             padding: 30px;
             border-radius: 12px;
-            border: 1px solid #edf2f7;
+            border: 1px solid #e2e8f0;
             margin-bottom: 30px;
             font-size: 1.05rem;
         }
@@ -182,79 +211,78 @@
         .submission-controls {
             background: #fffcfc;
             padding: 30px;
-            border: 2px dashed #fed7d7;
+            border: 2px dashed var(--secondary);
             border-radius: 12px;
         }
 
         .btn-submit {
             font-size: 1rem;
             font-weight: 700;
-            padding: 16px 30px;
+            padding: 18px;
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
             transition: var(--transition);
             width: 100%;
         }
 
-        .btn-submit:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 8px 15px rgba(2, 45, 91, 0.2); }
+        .btn-submit:hover { background: var(--primary-light); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(2, 45, 91, 0.3); }
 
-        .signed-badge {
-            background: #e6fffa !important;
-            border: 1px solid #b2f5ea;
-            border-radius: 12px;
-        }
-
-        /* --- Responsive --- */
-        @media (max-width: 992px) {
-            #sidebar { width: 80px; }
-            .nav-link span, .arrow, .submenu, .logo-text { display: none; }
-            .nav-link { justify-content: center; padding: 15px; }
-        }
-
+        /* --- Mobile Responsiveness --- */
         @media (max-width: 768px) {
             #menu-toggle { display: flex; }
+            .topbar-center { display: flex; font-size: 0.85rem; } /* Forced visible but smaller */
+            
             #sidebar {
                 position: fixed;
-                left: -280px;
-                height: 100%;
-                z-index: 2000;
-                width: 280px;
-                box-shadow: 20px 0 40px rgba(0,0,0,0.1);
+                left: -100%;
+                top: 0;
+                height: 100vh;
+                width: 300px;
+                box-shadow: 25px 0 50px rgba(0,0,0,0.2);
             }
             #sidebar.active { left: 0; }
-            .nav-link span { display: block; }
-            .topbar-center { display: none; }
-            #main-content { padding: 15px; }
+            .sidebar-close { display: flex; align-items: center; justify-content: center; }
+
+            #main-content { padding: 20px 15px; }
+            .content-card { padding: 25px 20px; }
+            h1 { font-size: 1.6rem; }
+            .topbar { padding: 0 15px; }
+            .lang-btn span { display: none; } /* Icon only on mobile to save space */
         }
     </style>
 </head>
 <body>
 
-    <div class="logo-header">
-        <svg width="150" height="30" viewBox="0 0 180 37" fill="none" xmlns="http://www.w3.org/2000/svg"><g><path d="M0 15.2309V0.626219C0 0.275961 0.275278 0 0.624669 0H8.036C10.8841 0 13.1922 2.31383 13.1922 5.16896V15.2309C13.1922 15.5812 12.9169 15.8571 12.5675 15.8571H0.624669C0.275278 15.8571 0 15.5812 0 15.2309Z" fill="#B71530"/><path d="M0 21.7693V36.374C0 36.7242 0.275278 37.0002 0.624669 37.0002H8.036C10.8841 37.0002 13.1922 34.6864 13.1922 31.8312V21.7693C13.1922 21.419 12.9169 21.1431 12.5675 21.1431H0.624669C0.275278 21.1431 0 21.419 0 21.7693Z" fill="#B71530"/><path d="M31.7097 15.2309V0.626219C31.7097 0.275961 31.4345 0 31.0851 0H23.6737C20.8257 0 18.5176 2.31383 18.5176 5.16896V15.2309C18.5176 15.5812 18.7929 15.8571 19.1422 15.8571H31.0851C31.4345 15.8571 31.7097 15.5812 31.7097 15.2309Z" fill="#B71530"/><path d="M31.7097 21.7693V36.374C31.7097 36.7242 31.4345 37.0002 31.0851 37.0002H23.6737C20.8257 37.0002 18.5176 34.6864 18.5176 31.8312V21.7693Z" fill="#B71530"/><path d="M48.1734 30.8544H44.1289V6.1665H48.1734V16.6424H58.1575V6.1665H62.202V30.8438H58.1575V20.3042H48.1734V30.8438V30.8544Z" fill="#022D5B"/><path d="M67.8342 11.1762C67.1037 11.1762 66.4896 10.9427 65.992 10.4757C65.4838 10.0087 65.2402 9.38244 65.2402 8.60762C65.2402 7.83281 65.4943 7.20659 65.992 6.73958C66.5002 6.27257 67.1142 6.03906 67.8342 6.03906C68.5542 6.03906 69.2106 6.27257 69.6976 6.73958C70.1952 7.20659 70.4388 7.83281 70.4388 8.60762C70.4388 9.38244 70.1952 10.0087 69.6976 10.4757C69.2 11.1762 68.5859 11.1762 67.8342 11.1762ZM69.7717 30.8543H65.9073V13.4369H69.7717V30.8543Z" fill="#022D5B"/><path d="M77.469 30.8543H73.6045V13.437H77.4054V15.9737H77.9984C78.3054 15.2732 78.8665 14.6257 79.6818 14.0313C80.497 13.4476 81.7358 13.1504 83.3769 13.1504C84.7109 13.1504 85.8967 13.4476 86.9131 14.0526C87.9295 14.6469 88.7342 15.4961 89.3059 16.5787C89.8777 17.6613 90.1635 18.9456 90.1635 20.4209V30.8543H86.299V20.7393C86.299 19.2852 85.9391 18.2026 85.2297 17.4915C84.5097 16.791 83.5145 16.4301 82.2228 16.4301C80.7723 16.4301 79.6183 16.9183 78.7607 17.8948C77.9031 18.8713 77.4796 20.2511 77.4796 22.0342V30.8437L77.469 30.8543Z" fill="#022D5B"/><path d="M100.963 31.3426C99.534 31.3426 98.2106 30.9924 97.0036 30.3025C95.7966 29.6126 94.8226 28.5936 94.0814 27.2563C93.3403 25.9189 92.9697 24.3056 92.9697 22.427V21.8963C92.9697 20.0176 93.3297 18.4043 94.0602 17.067C94.7908 15.7296 95.7649 14.7001 96.9824 13.9995C98.2 13.299 99.5235 12.9382 100.953 12.9382C102.054 12.9382 102.986 13.0761 103.727 13.3415C104.478 13.6068 105.093 13.9571 105.569 14.3816C106.045 14.8062 106.405 15.2414 106.638 15.6872H107.242V6.1665H111.106V30.8438H107.305V28.4769H106.712C106.289 29.2092 105.643 29.8673 104.764 30.4511C103.886 31.0348 102.615 31.332 100.953 31.332L100.963 31.3426ZM102.096 27.9568C103.6 27.9568 104.838 27.4686 105.823 26.4921C106.808 25.5156 107.305 24.1252 107.305 22.3102V21.96C107.305 20.145 106.818 18.7652 105.844 17.7993C104.87 16.8335 103.621 16.3558 102.096 16.3558C100.572 16.3558 99.3541 16.8335 98.3694 17.7993C97.3848 18.7652 96.8871 20.145 96.8871 21.96V22.3102C96.8871 24.1252 97.3848 25.5156 98.3694 26.4921C99.3541 27.4686 100.593 27.9568 102.096 27.9568Z" fill="#022D5B"/><path d="M118.793 30.8543H114.929V13.437H118.73V15.443H119.323C119.63 14.8274 120.148 14.2967 120.868 13.8403C121.599 13.3839 122.573 13.1504 123.791 13.1504C125.008 13.1504 126.077 13.4051 126.85 13.9252C127.623 14.4453 128.206 15.1033 128.608 15.8994H129.201C129.603 15.1246 130.175 14.4665 130.927 13.9464C131.678 13.4157 132.748 13.1504 134.124 13.1504C135.225 13.1504 136.22 13.3839 137.099 13.8403C137.978 14.2967 138.677 14.9866 139.196 15.8994C139.714 16.8122 139.968 17.9479 139.968 19.2852V30.8543H136.104V19.6036C136.104 18.5741 135.829 17.778 135.278 17.2261C134.728 16.6742 133.944 16.3982 132.938 16.3982C131.858 16.3982 131.001 16.7485 130.355 17.4596C129.709 18.1601 129.391 19.1897 129.391 20.527V30.8543H125.527V19.6036C125.527 18.5741 125.252 17.778 124.701 17.2261C124.151 16.6742 123.378 16.3982 122.393 16.3982C121.292 16.3982 120.413 16.7485 119.778 17.4596C119.132 18.1601 118.814 19.1897 118.814 20.527V30.8543H118.793Z" fill="#022D5B"/><path d="M151.582 31.3427C149.846 31.3427 148.322 30.9712 146.987 30.2282C145.664 29.4853 144.626 28.4451 143.896 27.0865C143.155 25.7386 142.784 24.1571 142.784 22.3421V21.9176C142.784 20.1026 143.144 18.5317 143.875 17.1732C144.605 15.8252 145.622 14.7744 146.935 14.0315C148.247 13.2885 149.761 12.917 151.477 12.917C153.192 12.917 154.611 13.2885 155.87 14.0315C157.141 14.7744 158.126 15.8146 158.824 17.1519C159.523 18.4893 159.883 20.0389 159.883 21.8114V23.2231H146.733C146.776 24.6559 147.273 25.8022 148.216 26.662C149.158 27.5217 150.312 27.9463 151.699 27.9463C153.086 27.9463 154.028 27.6491 154.685 27.0653C155.341 26.4815 155.849 25.8129 156.199 25.0593L159.364 26.6832C159.036 27.3413 158.56 28.0312 157.935 28.7423C157.31 29.464 156.495 30.069 155.468 30.5785C154.441 31.088 153.149 31.3321 151.582 31.3321V31.3427ZM146.755 20.3043H155.934C155.839 19.0837 155.394 18.1178 154.579 17.4173C153.774 16.7168 152.715 16.3559 151.434 16.3559C150.153 16.3559 149.063 16.7061 148.247 17.4173C147.443 18.1178 146.945 19.0837 146.755 20.3043Z" fill="#022D5B"/><path d="M169.835 31.3426C168.406 31.3426 167.083 30.9924 165.876 30.3025C164.669 29.6126 163.695 28.5936 162.953 27.2563C162.212 25.9189 161.842 24.3056 161.842 22.427V21.8963C161.842 20.0176 162.202 18.4043 162.932 17.067C163.663 15.7296 164.637 14.7001 165.854 13.9995C167.072 13.299 168.396 12.9382 169.825 12.9382C170.926 12.9382 171.858 13.0761 172.599 13.3415C173.351 13.6068 173.965 13.9571 174.441 14.3816C174.917 14.8062 175.277 15.2414 175.51 15.6872H176.103V6.1665H179.968V30.8438H176.167V28.4769H175.574C175.15 29.2092 174.505 29.8673 173.626 30.4511C172.747 31.0348 171.477 31.332 169.814 31.332L169.835 31.3426ZM170.958 27.9568C172.461 27.9568 173.7 27.4686 174.685 26.4921C175.669 25.5156 176.167 24.1252 176.167 22.3102V21.96C176.167 20.145 175.68 18.7652 174.706 17.7993C173.732 16.8335 172.482 16.3558 170.958 16.3559C169.433 16.3559 168.216 16.8335 167.231 17.7993C166.246 18.7652 165.749 20.145 165.749 21.96V22.3102C165.749 24.1252 166.246 25.5156 167.231 26.4921C168.216 27.4686 169.454 27.9568 170.958 27.9568Z" fill="#022D5B"/></g></svg>
+    <div class="bg-widgets">
+        <div class="widget" style="width: 300px; height: 300px; top: -50px; right: -50px;"></div>
+        <div class="widget" style="width: 200px; height: 200px; bottom: 10%; left: -30px;"></div>
+        <div class="widget" style="width: 150px; height: 150px; top: 40%; right: 10%; animation-delay: -5s;"></div>
     </div>
 
     <header class="topbar">
         <div class="topbar-left">
-            <button id="menu-toggle" aria-label="Toggle Menu"><i class="fas fa-bars"></i></button>
-            <span class="logo-text" data-i18n="portal_title">Employee Portal</span>
+            <button id="menu-toggle"><i class="fas fa-bars"></i></button>
+            <div class="logo-box">
+                <svg width="120" height="30" viewBox="0 0 180 37" fill="none" xmlns="http://www.w3.org/2000/svg"><g><path d="M0 15.2309V0.626219C0 0.275961 0.275278 0 0.624669 0H8.036C10.8841 0 13.1922 2.31383 13.1922 5.16896V15.2309C13.1922 15.5812 12.9169 15.8571 12.5675 15.8571H0.624669C0.275278 15.8571 0 15.5812 0 15.2309Z" fill="#B71530"/><path d="M0 21.7693V36.374C0 36.7242 0.275278 37.0002 0.624669 37.0002H8.036C10.8841 37.0002 13.1922 34.6864 13.1922 31.8312V21.7693C13.1922 21.419 12.9169 21.1431 12.5675 21.1431H0.624669C0.275278 21.1431 0 21.419 0 21.7693Z" fill="#B71530"/><path d="M31.7097 15.2309V0.626219C31.7097 0.275961 31.4345 0 31.0851 0H23.6737C20.8257 0 18.5176 2.31383 18.5176 5.16896V15.2309C18.5176 15.5812 18.7929 15.8571 19.1422 15.8571H31.0851C31.4345 15.8571 31.7097 15.5812 31.7097 15.2309Z" fill="#B71530"/><path d="M31.7097 21.7693V36.374C31.7097 36.7242 31.4345 37.0002 31.0851 37.0002H23.6737C20.8257 37.0002 18.5176 34.6864 18.5176 31.8312V21.7693Z" fill="#B71530"/><path d="M48.1734 30.8544H44.1289V6.1665H48.1734V16.6424H58.1575V6.1665H62.202V30.8438H58.1575V20.3042H48.1734V30.8438V30.8544Z" fill="#022D5B"/><path d="M67.8342 11.1762C67.1037 11.1762 66.4896 10.9427 65.992 10.4757C65.4838 10.0087 65.2402 9.38244 65.2402 8.60762C65.2402 7.83281 65.4943 7.20659 65.992 6.73958C66.5002 6.27257 67.1142 6.03906 67.8342 6.03906C68.5542 6.03906 69.2106 6.27257 69.6976 6.73958C70.1952 7.20659 70.4388 7.83281 70.4388 8.60762C70.4388 9.38244 70.1952 10.0087 69.6976 10.4757C69.2 11.1762 68.5859 11.1762 67.8342 11.1762ZM69.7717 30.8543H65.9073V13.4369H69.7717V30.8543Z" fill="#022D5B"/><path d="M77.469 30.8543H73.6045V13.437H77.4054V15.9737H77.9984C78.3054 15.2732 78.8665 14.6257 79.6818 14.0313C80.497 13.4476 81.7358 13.1504 83.3769 13.1504C84.7109 13.1504 85.8967 13.4476 86.9131 14.0526C87.9295 14.6469 88.7342 15.4961 89.3059 16.5787C89.8777 17.6613 90.1635 18.9456 90.1635 20.4209V30.8543H86.299V20.7393C86.299 19.2852 85.9391 18.2026 85.2297 17.4915C84.5097 16.791 83.5145 16.4301 82.2228 16.4301C80.7723 16.4301 79.6183 16.9183 78.7607 17.8948C77.9031 18.8713 77.4796 20.2511 77.4796 22.0342V30.8437L77.469 30.8543Z" fill="#022D5B"/><path d="M100.963 31.3426C99.534 31.3426 98.2106 30.9924 97.0036 30.3025C95.7966 29.6126 94.8226 28.5936 94.0814 27.2563C93.3403 25.9189 92.9697 24.3056 92.9697 22.427V21.8963C92.9697 20.0176 93.3297 18.4043 94.0602 17.067C94.7908 15.7296 95.7649 14.7001 96.9824 13.9995C98.2 13.299 99.5235 12.9382 100.953 12.9382C102.054 12.9382 102.986 13.0761 103.727 13.3415C104.478 13.6068 105.093 13.9571 105.569 14.3816C106.045 14.8062 106.405 15.2414 106.638 15.6872H107.242V6.1665H111.106V30.8438H107.305V28.4769H106.712C106.289 29.2092 105.643 29.8673 104.764 30.4511C103.886 31.0348 102.615 31.332 100.953 31.332L100.963 31.3426ZM102.096 27.9568C103.6 27.9568 104.838 27.4686 105.823 26.4921C106.808 25.5156 107.305 24.1252 107.305 22.3102V21.96C107.305 20.145 106.818 18.7652 105.844 17.7993C104.87 16.8335 103.621 16.3558 102.096 16.3558C100.572 16.3558 99.3541 16.8335 98.3694 17.7993C97.3848 18.7652 96.8871 20.145 96.8871 21.96V22.3102C96.8871 24.1252 97.3848 25.5156 98.3694 26.4921C99.3541 27.4686 100.593 27.9568 102.096 27.9568Z" fill="#022D5B"/><path d="M118.793 30.8543H114.929V13.437H118.73V15.443H119.323C119.63 14.8274 120.148 14.2967 120.868 13.8403C121.599 13.3839 122.573 13.1504 123.791 13.1504C125.008 13.1504 126.077 13.4051 126.85 13.9252C127.623 14.4453 128.206 15.1033 128.608 15.8994H129.201C129.603 15.1246 130.175 14.4665 130.927 13.9464C131.678 13.4157 132.748 13.1504 134.124 13.1504C135.225 13.1504 136.22 13.3839 137.099 13.8403C137.978 14.2967 138.677 14.9866 139.196 15.8994C139.714 16.8122 139.968 17.9479 139.968 19.2852V30.8543H136.104V19.6036C136.104 18.5741 135.829 17.778 135.278 17.2261C134.728 16.6742 133.944 16.3982 132.938 16.3982C131.858 16.3982 131.001 16.7485 130.355 17.4596C129.709 18.1601 129.391 19.1897 129.391 20.527V30.8543H125.527V19.6036C125.527 18.5741 125.252 17.778 124.701 17.2261C124.151 16.6742 123.378 16.3982 122.393 16.3982C121.292 16.3982 120.413 16.7485 119.778 17.4596C119.132 18.1601 118.814 19.1897 118.814 20.527V30.8543H118.793Z" fill="#022D5B"/><path d="M151.582 31.3427C149.846 31.3427 148.322 30.9712 146.987 30.2282C145.664 29.4853 144.626 28.4451 143.896 27.0865C143.155 25.7386 142.784 24.1571 142.784 22.3421V21.9176C142.784 20.1026 143.144 18.5317 143.875 17.1732C144.605 15.8252 145.622 14.7744 146.935 14.0315C148.247 13.2885 149.761 12.917 151.477 12.917C153.192 12.917 154.611 13.2885 155.87 14.0315C157.141 14.7744 158.126 15.8146 158.824 17.1519C159.523 18.4893 159.883 20.0389 159.883 21.8114V23.2231H146.733C146.776 24.6559 147.273 25.8022 148.216 26.662C149.158 27.5217 150.312 27.9463 151.699 27.9463C153.086 27.9463 154.028 27.6491 154.685 27.0653C155.341 26.4815 155.849 25.8129 156.199 25.0593L159.364 26.6832C159.036 27.3413 158.56 28.0312 157.935 28.7423C157.31 29.464 156.495 30.069 155.468 30.5785C154.441 31.088 153.149 31.3321 151.582 31.3321V31.3427ZM146.755 20.3043H155.934C155.839 19.0837 155.394 18.1178 154.579 17.4173C153.774 16.7168 152.715 16.3559 151.434 16.3559C150.153 16.3559 149.063 16.7061 148.247 17.4173C147.443 18.1178 146.945 19.0837 146.755 20.3043Z" fill="#022D5B"/><path d="M169.835 31.3426C168.406 31.3426 167.083 30.9924 165.876 30.3025C164.669 29.6126 163.695 28.5936 162.953 27.2563C162.212 25.9189 161.842 24.3056 161.842 22.427V21.8963C161.842 20.0176 162.202 18.4043 162.932 17.067C163.663 15.7296 164.637 14.7001 165.854 13.9995C167.072 13.299 168.396 12.9382 169.825 12.9382C170.926 12.9382 171.858 13.0761 172.599 13.3415C173.351 13.6068 173.965 13.9571 174.441 14.3816C174.917 14.8062 175.277 15.2414 175.51 15.6872H176.103V6.1665H179.968V30.8438H176.167V28.4769H175.574C175.15 29.2092 174.505 29.8673 173.626 30.4511C172.747 31.0348 171.477 31.332 169.814 31.332L169.835 31.3426ZM170.958 27.9568C172.461 27.9568 173.7 27.4686 174.685 26.4921C175.669 25.5156 176.167 24.1252 176.167 22.3102V21.96C176.167 20.145 175.68 18.7652 174.706 17.7993C173.732 16.8335 172.482 16.3558 170.958 16.3559C169.433 16.3559 168.216 16.8335 167.231 17.7993C166.246 18.7652 165.749 20.145 165.749 21.96V22.3102C165.749 24.1252 166.246 25.5156 167.231 26.4921C168.216 27.4686 169.454 27.9568 170.958 27.9568Z" fill="#022D5B"/></g></svg>
+            </div>
         </div>
         <div class="topbar-center">
-            <span data-i18n="welcome">Welcome back</span>, <span id="username">User</span>
+            <span data-i18n="welcome">Welcome</span>, <span id="username">User</span>
         </div>
         <div class="topbar-right">
             <button onclick="toggleLanguage()" class="lang-btn">
                 <i class="fas fa-globe"></i> <span id="lang-btn-text">ಕನ್ನಡ</span>
             </button>
-            <button onclick="logout()" class="logout-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+            <button onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
     <div class="container-flex">
         <nav id="sidebar">
+            <button class="sidebar-close" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
             <ul class="nav-list">
                 <li class="nav-item" onclick="goHome()">
                     <div class="nav-link"><i class="fas fa-th-large"></i> <span data-i18n="home">Dashboard</span></div>
@@ -266,12 +294,12 @@
                         <i class="fas fa-chevron-down arrow"></i>
                     </div>
                     <ul id="policy-submenu" class="submenu">
-                        <li onclick="loadContent('code_of_conduct')"><a href="#" data-i18n="code_of_conduct">Code of Conduct</a></li>
-                        <li onclick="loadContent('remote_work')"><a href="#" data-i18n="remote_work">Remote Work</a></li>
-                        <li onclick="loadContent('data_privacy')"><a href="#" data-i18n="data_privacy">Data Privacy</a></li>
-                        <li onclick="loadContent('travel_expense')"><a href="#" data-i18n="travel_expense">Travel & Expense</a></li>
-                        <li onclick="loadContent('anti_harassment')"><a href="#" data-i18n="anti_harassment">Anti-Harassment</a></li>
-                        <li onclick="loadContent('workplace_safety')"><a href="#" data-i18n="workplace_safety">Workplace Safety</a></li>
+                        <li onclick="loadContent('code_of_conduct')"><a data-i18n="code_of_conduct">Code of Conduct</a></li>
+                        <li onclick="loadContent('remote_work')"><a data-i18n="remote_work">Remote Work</a></li>
+                        <li onclick="loadContent('data_privacy')"><a data-i18n="data_privacy">Data Privacy</a></li>
+                        <li onclick="loadContent('travel_expense')"><a data-i18n="travel_expense">Travel & Expense</a></li>
+                        <li onclick="loadContent('anti_harassment')"><a data-i18n="anti_harassment">Anti-Harassment</a></li>
+                        <li onclick="loadContent('workplace_safety')"><a data-i18n="workplace_safety">Workplace Safety</a></li>
                     </ul>
                 </li>
                 <li class="nav-item" onclick="loadContent('banding')">
@@ -288,12 +316,12 @@
 
         <main id="main-content">
             <div id="welcome-screen" class="content-card">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <div style="width: 80px; height: 80px; background: #f0f7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                        <i class="fas fa-hand-sparkles fa-2x" style="color: var(--primary);"></i>
+                <div style="text-align: center;">
+                    <div style="width: 100px; height: 100px; background: rgba(2, 45, 91, 0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 25px;">
+                        <i class="fas fa-user-tie fa-3x" style="color: var(--primary);"></i>
                     </div>
                     <h1 data-i18n="welcome_header">Welcome to the Portal</h1>
-                    <p data-i18n="instruction" style="color: var(--text-muted); font-size: 1.1rem;">Select a category from the sidebar to review and acknowledge policies.</p>
+                    <p data-i18n="instruction" style="color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto;">Select a category from the sidebar to review and acknowledge our organization's policies.</p>
                 </div>
             </div>
             <div id="content-display" class="content-card" style="display: none;"></div>
@@ -301,169 +329,115 @@
     </div>
 
     <script>
-        /* LOGIC REMAINS AS PROVIDED */
+        // Logic and Internationalization remains same but with Mobile Fixes
         const i18n = {
             en: {
                 home: "Dashboard", welcome: "Welcome", logout: "Logout", policies: "Policies", banding: "Banding", holidays: "Holidays", leaves: "Leaves",
                 agree: "I have read and agree to the policy terms", submit: "Acknowledge & Submit", success_msg: "Policy Acknowledged Successfully!",
-                portal_title: "Employee Portal", welcome_header: "Welcome, Team Member!", instruction: "Please select a policy from the sidebar to continue.",
+                portal_title: "Employee Portal", welcome_header: "Employee Dashboard", instruction: "Please select a section from the sidebar to continue.",
                 code_of_conduct: "Code of Conduct", remote_work: "Remote Work Policy", data_privacy: "Data Privacy Policy",
                 travel_expense: "Travel and Expense Policy", anti_harassment: "Anti-Harassment Policy", workplace_safety: "Workplace Safety Policy",
-                code_of_conduct_content: "Maintain integrity and professional standards in all business dealings...", remote_work_content: "Guidelines for working outside the office, including security and productivity standards...",
-                data_privacy_content: "Protocols for handling sensitive employee and client data securely...", travel_expense_content: "Procedures for booking and reimbursement of business-related travel...",
-                anti_harassment_content: "Zero tolerance policy for any form of harassment or discrimination...", workplace_safety_content: "Safety protocols and emergency procedures for all office locations...",
-                banding_content: "Information regarding employee grades: Junior, Associate, Senior, Manager, Director.",
-                holidays_content: "List of upcoming holidays: New Year, Republic Day, Independence Day, Diwali.",
-                leaves_content: "Overview of leave types: Privilege, Sick, and Casual Leave allocations.",
-                ack_text: "I hereby acknowledge that I have received, read, and understand the "
+                ack_text: "I hereby acknowledge that I have received, read, and understand the ",
+                code_of_conduct_content: "Maintain integrity and professional standards in all business dealings...",
+                remote_work_content: "Guidelines for working outside the office...",
+                data_privacy_content: "Protocols for handling sensitive data...",
+                travel_expense_content: "Procedures for reimbursement...",
+                anti_harassment_content: "Zero tolerance policy for any form of harassment...",
+                workplace_safety_content: "Safety protocols and emergency procedures...",
+                banding_content: "Grades: Junior, Associate, Senior, Manager, Director.",
+                holidays_content: "Holidays: New Year, Republic Day, Independence Day, Diwali.",
+                leaves_content: "Leave types: Privilege, Sick, and Casual Leave allocations."
             },
             kn: {
                 home: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್", welcome: "ಸ್ವಾಗತ", logout: "ನಿರ್ಗಮಿಸಿ", policies: "ನೀತಿಗಳು", banding: "ಬ್ಯಾಂಡಿಂಗ್", holidays: "ರಜಾದಿನಗಳು", leaves: "ರಜೆಗಳು",
                 agree: "ನಾನು ನಿಯಮಗಳನ್ನು ಓದಿದ್ದೇನೆ ಮತ್ತು ಒಪ್ಪುತ್ತೇನೆ", submit: "ಸಲ್ಲಿಸಿ", success_msg: "ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ!",
                 portal_title: "ಉದ್ಯೋಗಿ ಪೋರ್ಟಲ್", welcome_header: "ಸ್ವಾಗತ!", instruction: "ಮುಂದುವರಿಯಲು ದಯವಿಟ್ಟು ಆಯ್ಕೆಮಾಡಿ.",
                 code_of_conduct: "ನಡವಳಿಕೆಯ ಸಂಹಿತೆ", remote_work: "ರಿಮೋಟ್ ಕೆಲಸದ ನೀತಿ", data_privacy: "ಡೇಟಾ ಗೌಪ್ಯತೆ",
-                travel_expense: "ಪ್ರಯಾಣ ಮತ್ತು ವೆಚ್ಚದ ನೀತಿ", anti_harassment: "ಕಿರುಕುಳ ವಿರೋಧಿ ನೀತಿ", workplace_safety: "ಕಾರ್ಯಸ್ಥಳದ ಸುರಕ್ಷತೆ",
-                banding_content: "ಹಂತಗಳು: ಜೂನಿಯರ್, ಅಸೋಸಿಯೇಟ್, ಮ್ಯಾನೇಜರ್.",
-                holidays_content: "ರಜಾದಿನಗಳು: ಹೊಸ ವರ್ಷ, ಗಣರಾಜ್ಯೋತ್ಸವ, ದೀಪಾವಳಿ.",
-                leaves_content: "ಸವಲತ್ತು, ಅನಾರೋಗ್ಯ ಮತ್ತು ಸಾಂದರ್ಭಿಕ ರಜೆಗಳು.",
-                ack_text: "ನಾನು ಈ ಮೂಲಕ ಸ್ವೀಕರಿಸಿದ್ದೇನೆ, ಓದಿದ್ದೇನೆ ಮತ್ತು ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇನೆ ಎಂದು ಒಪ್ಪಿಕೊಳ್ಳುತ್ತೇನೆ "
+                travel_expense: "ಪ್ರಯಾಣ ವೆಚ್ಚದ ನೀತಿ", anti_harassment: "ಕಿರುಕುಳ ವಿರೋಧಿ ನೀತಿ", workplace_safety: "ಸುರಕ್ಷತೆ",
+                ack_text: "ನಾನು ಈ ಮೂಲಕ ಸ್ವೀಕರಿಸಿದ್ದೇನೆ ಮತ್ತು ಓದಿದ್ದೇನೆ ಎಂದು ಒಪ್ಪಿಕೊಳ್ಳುತ್ತೇನೆ "
             }
         };
 
         let currentLang = localStorage.getItem('lang') || 'en';
-        let currentActiveKey = '';
-        let signedPolicies = []; 
+        let signedPolicies = [];
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const token = localStorage.getItem('token');
-            if (!token || token === "undefined") {
-                window.location.replace("index.html");
-                return;
-            }
-
+        document.addEventListener('DOMContentLoaded', () => {
             const menuBtn = document.getElementById('menu-toggle');
-            if(menuBtn) {
-                menuBtn.addEventListener('click', () => {
-                    document.getElementById('sidebar').classList.toggle('active');
-                });
-            }
+            const sidebar = document.getElementById('sidebar');
 
-            await fetchUserStatus();
+            menuBtn.addEventListener('click', () => {
+                sidebar.classList.add('active');
+            });
+
             applyLanguage();
+            fetchUserStatus();
         });
 
-        function goHome() {
-            currentActiveKey = '';
-            document.getElementById('content-display').style.display = 'none';
-            document.getElementById('welcome-screen').style.display = 'block';
-            if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('active');
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
         }
 
-        async function fetchUserStatus() {
-            const token = localStorage.getItem('token');
-            try {
-                const res = await fetch('https://employee-policy-system.onrender.com/api/employee/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json(); 
-                if (data.user) {
-                    document.getElementById('username').innerText = data.user.name || "User";
-                    if (data.user.policySubmissions) {
-                        signedPolicies = data.user.policySubmissions.map(p => p.policyKey);
-                        updateSidebarStatus(); 
-                    }
-                }
-            } catch (err) { console.error(err); }
-        }
-
-        function updateSidebarStatus() {
-            document.querySelectorAll('#sidebar li').forEach(li => {
-                const attr = li.getAttribute('onclick');
-                if(!attr) return;
-                const match = attr.match(/'([^']+)'/);
-                if(!match) return;
-                const key = match[1];
-                if (signedPolicies.includes(key)) {
-                    li.classList.add('is-signed');
-                    const textSpan = li.querySelector('[data-i18n]');
-                    if(textSpan) {
-                        const translation = i18n[currentLang][key] || key;
-                        textSpan.innerHTML = `<i class="fas fa-check-circle"></i> ${translation}`;
-                    }
-                }
-            });
+        function toggleSubmenu() {
+            const submenu = document.getElementById('policy-submenu');
+            const arrow = document.querySelector('.arrow');
+            submenu.classList.toggle('open');
+            arrow.style.transform = submenu.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
         function loadContent(key) {
-            currentActiveKey = key;
             const display = document.getElementById('content-display');
             const welcome = document.getElementById('welcome-screen');
             welcome.style.display = 'none';
             display.style.display = 'block';
 
-            const isSigned = signedPolicies.includes(key);
             const title = i18n[currentLang][key] || key;
-            const content = i18n[currentLang][`${key}_content`] || "Information coming soon...";
-            const ackStatement = i18n[currentLang].ack_text + "<strong>" + title + "</strong>" + (currentLang === 'en' ? " and agree to abide by its terms." : " ಮತ್ತು ಅದರ ನಿಯಮಗಳಿಗೆ ಬದ್ಧರಾಗಿರಲು ಒಪ್ಪುತ್ತೇನೆ.");
+            const content = i18n[currentLang][`${key}_content`] || "Loading content...";
+            const isSigned = signedPolicies.includes(key);
 
             display.innerHTML = `
                 <h2 class="policy-title">${title}</h2>
                 <div class="policy-text-box">${content}</div>
                 ${isSigned ? 
-                    `<div class="signed-badge" style="color:var(--success); padding:25px; display:flex; align-items:center; gap:15px; font-weight:700;">
-                        <i class="fas fa-check-double fa-2x"></i> 
-                        <div>
-                            <div style="font-size: 1.1rem;">${i18n[currentLang].success_msg}</div>
-                            <div style="font-size: 0.85rem; opacity: 0.8; font-weight: 500;">You have successfully acknowledged this document.</div>
-                        </div>
+                    `<div style="color:var(--success); background:#e6fffa; padding:20px; border-radius:12px; display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-check-circle fa-lg"></i> <b>Acknowledged</b>
                     </div>` : 
                     `<div class="submission-controls">
-                        <p style="font-size: 1rem; line-height: 1.6; margin-bottom: 20px; color: #444;">${ackStatement}</p>
-                        <div class="radio-group" style="margin: 20px 0;">
-                            <label style="cursor:pointer; display:flex; align-items:center; gap:12px; font-weight:600; font-size: 0.95rem;">
-                                <input type="checkbox" id="agree-check" style="width:20px; height:20px; accent-color: var(--primary);"> ${i18n[currentLang].agree}
-                            </label>
-                        </div>
-                        <button class="btn-submit" onclick="handlePolicySubmit('${key}')">
-                            ${i18n[currentLang].submit}
-                        </button>
+                        <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
+                            <input type="checkbox" id="agree-check" style="width:18px; height:18px;"> ${i18n[currentLang].agree}
+                        </label>
+                        <button class="btn-submit" onclick="handlePolicySubmit('${key}')">${i18n[currentLang].submit}</button>
                     </div>`
                 }
             `;
-            if(window.innerWidth < 768) document.getElementById('sidebar').classList.remove('active');
+            
+            if(window.innerWidth <= 768) closeSidebar();
         }
 
-        async function handlePolicySubmit(policyKey) {
-            const isChecked = document.getElementById('agree-check').checked;
-            if (!isChecked) return alert(currentLang === 'en' ? "Please check the agreement box." : "ದಯವಿಟ್ಟು ಒಪ್ಪಂದದ ಪೆಟ್ಟಿಗೆಯನ್ನು ಗುರುತಿಸಿ.");
-
+        async function fetchUserStatus() {
+            const token = localStorage.getItem('token');
+            if(!token) return;
             try {
-                const res = await fetch('https://employee-policy-system.onrender.com/api/employee/submit-policy', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({ policyKey, status: 'agreed' })
+                const res = await fetch('https://employee-policy-system.onrender.com/api/employee/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
-                if (res.ok) {
-                    if(!signedPolicies.includes(policyKey)) signedPolicies.push(policyKey);
-                    updateSidebarStatus();
-                    loadContent(policyKey);
-                } else {
-                    const errData = await res.json();
-                    alert("Error: " + errData.message);
+                const data = await res.json();
+                if(data.user) {
+                    document.getElementById('username').innerText = data.user.name;
+                    signedPolicies = data.user.policySubmissions.map(p => p.policyKey);
                 }
-            } catch (err) { alert("Connection error."); }
+            } catch(e) {}
+        }
+
+        function goHome() {
+            document.getElementById('content-display').style.display = 'none';
+            document.getElementById('welcome-screen').style.display = 'block';
+            if(window.innerWidth <= 768) closeSidebar();
         }
 
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'kn' : 'en';
             localStorage.setItem('lang', currentLang);
             applyLanguage();
-            if (currentActiveKey) loadContent(currentActiveKey);
-            updateSidebarStatus();
         }
 
         function applyLanguage() {
@@ -472,13 +446,6 @@
                 if (i18n[currentLang][key]) el.innerText = i18n[currentLang][key];
             });
             document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'ಕನ್ನಡ' : 'English';
-        }
-
-        function toggleSubmenu() {
-            const menu = document.getElementById('policy-submenu');
-            const arrow = document.querySelector('.arrow');
-            menu.classList.toggle('open');
-            arrow.style.transform = menu.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
         function logout() {
