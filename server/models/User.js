@@ -12,8 +12,8 @@ const policyResponseSchema = new mongoose.Schema({
       "travel_expense",
       "anti_harassment",
       "workplace_safety",
-      "banding",     // 🔹 Add this
-      "holidays",    // 🔹 Add this
+      "banding",     
+      "holidays",    
       "leaves"
     ]
   },
@@ -30,11 +30,20 @@ const policyResponseSchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema(
   {
+    // 🆔 New: Employee ID Field
+    employeeId: {
+      type: String,
+      trim: true,
+      index: true, // Speeds up admin searches
+      default: ""
+    },
+    
     name: { 
       type: String, 
       required: [true, "Name is required"], 
       trim: true 
     },
+    
     phone: { 
       type: String, 
       required: [true, "Phone number is required"], 
@@ -56,12 +65,10 @@ const userSchema = new mongoose.Schema(
       select: false 
     },
 
-    // 📊 New: Multi-Policy Tracking
-    // This replaces the old 'policyStatus' and 'hasSignedPolicy' 
-    // to track every policy individually for the Admin Dashboard.
+    // 📊 Multi-Policy Tracking
     policySubmissions: [policyResponseSchema],
 
-    // Global tracking for legacy support or quick dashboard checks
+    // Global tracking
     lastActive: {
       type: Date,
       default: Date.now
@@ -69,7 +76,6 @@ const userSchema = new mongoose.Schema(
   },
   { 
     timestamps: true,
-    // Ensure virtuals are included when converting to JSON (useful for frontend)
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
   }

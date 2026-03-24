@@ -30,7 +30,6 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid Credentials" });
     }
 
-    // Using bcrypt for secure password comparison
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid Credentials" });
@@ -55,7 +54,7 @@ router.post("/login", async (req, res) => {
 
 
 // =========================
-// 🔹 GET ALL EMPLOYEES (Multi-Policy View)
+// 🔹 GET ALL EMPLOYEES
 // =========================
 router.get("/employees", auth, async (req, res) => {
   try {
@@ -70,14 +69,15 @@ router.get("/employees", auth, async (req, res) => {
       query = {
         $or: [
           { name: { $regex: search, $options: "i" } },
-          { phone: { $regex: search } }
+          { phone: { $regex: search } },
+          { employeeId: { $regex: search, $options: "i" } } // Added Employee ID search support
         ]
       };
     }
 
-    // UPDATED: Now fetches policySubmissions array instead of single policyStatus
+    // Now includes employeeId in the selection
     const users = await User.find(query)
-      .select("name phone policySubmissions createdAt updatedAt")
+      .select("employeeId name phone policySubmissions createdAt updatedAt")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -101,7 +101,7 @@ router.post("/create-employee", auth, async (req, res) => {
       return res.status(403).json({ message: "Access Denied" });
     }
 
-    let { name, phone } = req.body;
+    let { employeeId, name, phone } = req.body; // Destructured employeeId
 
     if (!name || !phone) {
       return res.status(400).json({ message: "Name and phone are required" });
@@ -112,11 +112,11 @@ router.post("/create-employee", auth, async (req, res) => {
 
     const existing = await User.findOne({ phone });
     if (existing) {
-      return res.status(400).json({ message: "Employee already exists" });
+      return res.status(400).json({ message: "Employee with this phone already exists" });
     }
 
-    // UPDATED: Initializes with an empty policySubmissions array
     const user = new User({
+      employeeId: employeeId ? employeeId.trim() : "", // Save employeeId
       name,
       phone,
       policySubmissions: [] 
@@ -177,9 +177,10 @@ router.put("/update-employee/:id", auth, async (req, res) => {
         return res.status(400).json({ message: "Invalid ID format" });
     }
 
-    let { name, phone } = req.body;
+    let { employeeId, name, phone } = req.body; // Added employeeId here
     const updateData = {};
 
+    if (employeeId !== undefined) updateData.employeeId = employeeId.trim();
     if (name) updateData.name = name.trim();
     if (phone) updateData.phone = sanitizePhone(phone);
 
