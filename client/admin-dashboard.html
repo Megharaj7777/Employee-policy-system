@@ -16,6 +16,7 @@
         --text-main: #2d3436;
         --success: #27ae60;
         --danger: #e74c3c;
+        --warning: #f1c40f;
     }
 
     body { margin: 0; font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
@@ -29,41 +30,68 @@
     .logo-header {
         position: fixed; top: 0; left: 0; right: 0; height: 70px;
         background: var(--white); display: flex; align-items: center;
-        justify-content: space-between; padding: 0 40px;
+        justify-content: space-between; padding: 0 20px;
         box-shadow: 0 2px 15px rgba(0,0,0,0.1); z-index: 1000;
     }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--primary); font-size: 20px; }
-    .logout-btn { background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
-    .logout-btn:hover { background: #c0392b; transform: translateY(-2px); }
+    .brand svg { max-width: 140px; height: auto; }
+    .logout-btn { background: var(--danger); color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s; font-size: 14px; }
+    .logout-btn span { display: inline-block; }
 
-    .navbar { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); padding: 120px 20px 80px; color: white; text-align: center; border-bottom-left-radius: 50% 20px; border-bottom-right-radius: 50% 20px; }
+    .navbar { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); padding: 110px 20px 70px; color: white; text-align: center; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
+    .navbar h1 { font-size: 1.8rem; margin: 0; }
+    .navbar p { font-size: 0.9rem; opacity: 0.9; }
 
-    .container { padding: 20px; max-width: 1200px; margin: -60px auto 40px; position: relative; z-index: 10; }
+    .container { padding: 15px; max-width: 1200px; margin: -40px auto 40px; position: relative; z-index: 10; }
     
     /* 📊 Stats Section */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 25px; }
     .stat-card { background: white; padding: 20px; border-radius: 16px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-top: 4px solid var(--primary); }
-    .stat-card h2 { margin: 10px 0; color: var(--primary); font-size: 28px; }
-    .stat-card p { margin: 0; color: #64748b; font-size: 14px; font-weight: 600; }
+    .stat-card h2 { margin: 10px 0; color: var(--primary); font-size: 24px; }
+    .stat-card p { margin: 0; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; }
 
-    .card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 30px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.08); margin-bottom: 30px; }
+    .card { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); margin-bottom: 25px; }
     
-    .input-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
-    input { flex: 1; min-width: 200px; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; transition: 0.3s; }
+    .input-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
+    input { flex: 1; min-width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; transition: 0.3s; box-sizing: border-box; }
     input:focus { border-color: var(--primary); }
     
-    .btn-main { padding: 14px 28px; border: none; border-radius: 10px; background: var(--primary); color: white; cursor: pointer; font-weight: 600; transition: 0.3s; }
-    .btn-main:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(9, 132, 227, 0.3); }
+    .btn-main { flex: 1; min-width: 120px; padding: 12px 20px; border: none; border-radius: 10px; background: var(--primary); color: white; cursor: pointer; font-weight: 600; transition: 0.3s; }
+    .btn-main:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(9, 132, 227, 0.3); }
 
-    /* 📈 Progress Bar in Table */
-    .progress-container { width: 100%; background: #edf2f7; border-radius: 10px; height: 8px; margin-top: 5px; overflow: hidden; }
+    /* 📈 Progress Bar */
+    .progress-container { width: 100%; background: #edf2f7; border-radius: 10px; height: 8px; margin-top: 8px; overflow: hidden; }
     .progress-fill { height: 100%; background: var(--secondary); transition: width 0.5s ease-in-out; }
     .percent-text { font-size: 12px; font-weight: 700; color: var(--text-main); }
 
-    .table-wrapper { width: 100%; overflow-x: auto; }
+    .table-header-flex { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+
+    /* 📱 Responsive Table Logic */
+    .table-wrapper { width: 100%; }
     table { width: 100%; border-collapse: collapse; }
-    th { background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; padding: 18px; text-align: left; }
-    td { padding: 18px; border-bottom: 1px solid #f1f5f9; }
+    th { background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; padding: 15px; text-align: left; }
+    td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+
+    @media (max-width: 768px) {
+        .logo-header { padding: 0 15px; }
+        .logout-btn span { display: none; } /* Hide text, show icon only on small mobile */
+        
+        .navbar { padding-top: 100px; }
+        .navbar h1 { font-size: 1.4rem; }
+        
+        input { min-width: 100%; }
+        .btn-main { width: 100%; flex: none; }
+
+        .table-header-flex { align-items: stretch; }
+        #searchInput { max-width: 100% !important; }
+
+        /* Transform table to Cards */
+        thead { display: none; }
+        tr { display: block; background: #fff; border: 1px solid #edf2f7; border-radius: 12px; margin-bottom: 15px; padding: 10px; position: relative; }
+        td { display: block; text-align: left !important; padding: 8px 5px; border: none; }
+        td:last-child { border-top: 1px solid #f1f5f9; margin-top: 10px; padding-top: 15px; text-align: center !important; }
+        
+        .stat-card { border-top-width: 6px; }
+    }
 
     .hidden { display: none !important; }
 </style>
@@ -73,71 +101,73 @@
 <div class="medical-bg" id="bg"></div>
 
 <header class="logo-header">
-    <div class="brand">   <svg width="180" height="37" viewBox="0 0 180 37" fill="none" xmlns="http://www.w3.org/2000/svg">       
-         <g>
-            <path d="M0 15.2309V0.626219C0 0.275961 0.275278 0 0.624669 0H8.036C10.8841 0 13.1922 2.31383 13.1922 5.16896V15.2309C13.1922 15.5812 12.9169 15.8571 12.5675 15.8571H0.624669C0.275278 15.8571 0 15.5812 0 15.2309Z" fill="#B71530"/>
-            <path d="M0 21.7693V36.374C0 36.7242 0.275278 37.0002 0.624669 37.0002H8.036C10.8841 37.0002 13.1922 34.6864 13.1922 31.8312V21.7693C13.1922 21.419 12.9169 21.1431 12.5675 21.1431H0.624669C0.275278 21.1431 0 21.419 0 21.7693Z" fill="#B71530"/>
-            <path d="M31.7097 15.2309V0.626219C31.7097 0.275961 31.4345 0 31.0851 0H23.6737C20.8257 0 18.5176 2.31383 18.5176 5.16896V15.2309C18.5176 15.5812 18.7929 15.8571 19.1422 15.8571H31.0851C31.4345 15.8571 31.7097 15.5812 31.7097 15.2309Z" fill="#B71530"/>
-            <path d="M31.7097 21.7693V36.374C31.7097 36.7242 31.4345 37.0002 31.0851 37.0002H23.6737C20.8257 37.0002 18.5176 34.6864 18.5176 31.8312V21.7693Z" fill="#B71530"/>
-            <path d="M48.1734 30.8544H44.1289V6.1665H48.1734V16.6424H58.1575V6.1665H62.202V30.8438H58.1575V20.3042H48.1734V30.8438V30.8544Z" fill="#022D5B"/>
-            <path d="M67.8342 11.1762C67.1037 11.1762 66.4896 10.9427 65.992 10.4757C65.4838 10.0087 65.2402 9.38244 65.2402 8.60762C65.2402 7.83281 65.4943 7.20659 65.992 6.73958C66.5002 6.27257 67.1142 6.03906 67.8342 6.03906C68.5542 6.03906 69.2106 6.27257 69.6976 6.73958C70.1952 7.20659 70.4388 7.83281 70.4388 8.60762C70.4388 9.38244 70.1952 10.0087 69.6976 10.4757C69.2 10.9427 68.5859 11.1762 67.8342 11.1762ZM69.7717 30.8543H65.9073V13.4369H69.7717V30.8543Z" fill="#022D5B"/>
-            <path d="M77.469 30.8543H73.6045V13.437H77.4054V15.9737H77.9984C78.3054 15.2732 78.8665 14.6257 79.6818 14.0313C80.497 13.4476 81.7358 13.1504 83.3769 13.1504C84.7109 13.1504 85.8967 13.4476 86.9131 14.0526C87.9295 14.6469 88.7342 15.4961 89.3059 16.5787C89.8777 17.6613 90.1635 18.9456 90.1635 20.4209V30.8543H86.299V20.7393C86.299 19.2852 85.9391 18.2026 85.2297 17.4915C84.5097 16.791 83.5145 16.4301 82.2228 16.4301C80.7723 16.4301 79.6183 16.9183 78.7607 17.8948C77.9031 18.8713 77.4796 20.2511 77.4796 22.0342V30.8437L77.469 30.8543Z" fill="#022D5B"/>
-            <path d="M100.963 31.3426C99.534 31.3426 98.2106 30.9924 97.0036 30.3025C95.7966 29.6126 94.8226 28.5936 94.0814 27.2563C93.3403 25.9189 92.9697 24.3056 92.9697 22.427V21.8963C92.9697 20.0176 93.3297 18.4043 94.0602 17.067C94.7908 15.7296 95.7649 14.7001 96.9824 13.9995C98.2 13.299 99.5235 12.9382 100.953 12.9382C102.054 12.9382 102.986 13.0761 103.727 13.3415C104.478 13.6068 105.093 13.9571 105.569 14.3816C106.045 14.8062 106.405 15.2414 106.638 15.6872H107.242V6.1665H111.106V30.8438H107.305V28.4769H106.712C106.289 29.2092 105.643 29.8673 104.764 30.4511C103.886 31.0348 102.615 31.332 100.953 31.332L100.963 31.3426ZM102.096 27.9568C103.6 27.9568 104.838 27.4686 105.823 26.4921C106.808 25.5156 107.305 24.1252 107.305 22.3102V21.96C107.305 20.145 106.818 18.7652 105.844 17.7993C104.87 16.8335 103.621 16.3558 102.096 16.3558C100.572 16.3558 99.3541 16.8335 98.3694 17.7993C97.3848 18.7652 96.8871 20.145 96.8871 21.96V22.3102C96.8871 24.1252 97.3848 25.5156 98.3694 26.4921C99.3541 27.4686 100.593 27.9568 102.096 27.9568Z" fill="#022D5B"/>
-            <path d="M118.793 30.8543H114.929V13.437H118.73V15.443H119.323C119.63 14.8274 120.148 14.2967 120.868 13.8403C121.599 13.3839 122.573 13.1504 123.791 13.1504C125.008 13.1504 126.077 13.4051 126.85 13.9252C127.623 14.4453 128.206 15.1033 128.608 15.8994H129.201C129.603 15.1246 130.175 14.4665 130.927 13.9464C131.678 13.4157 132.748 13.1504 134.124 13.1504C135.225 13.1504 136.22 13.3839 137.099 13.8403C137.978 14.2967 138.677 14.9866 139.196 15.8994C139.714 16.8122 139.968 17.9479 139.968 19.2852V30.8543H136.104V19.6036C136.104 18.5741 135.829 17.778 135.278 17.2261C134.728 16.6742 133.944 16.3982 132.938 16.3982C131.858 16.3982 131.001 16.7485 130.355 17.4596C129.709 18.1601 129.391 19.1897 129.391 20.527V30.8543H125.527V19.6036C125.527 18.5741 125.252 17.778 124.701 17.2261C124.151 16.6742 123.378 16.3982 122.393 16.3982C121.292 16.3982 120.413 16.7485 119.778 17.4596C119.132 18.1601 118.814 19.1897 118.814 20.527V30.8543H118.793Z" fill="#022D5B"/>
-            <path d="M151.582 31.3427C149.846 31.3427 148.322 30.9712 146.987 30.2282C145.664 29.4853 144.626 28.4451 143.896 27.0865C143.155 25.7386 142.784 24.1571 142.784 22.3421V21.9176C142.784 20.1026 143.144 18.5317 143.875 17.1732C144.605 15.8252 145.622 14.7744 146.935 14.0315C148.247 13.2885 149.761 12.917 151.477 12.917C153.192 12.917 154.611 13.2885 155.87 14.0315C157.141 14.7744 158.126 15.8146 158.824 17.1519C159.523 18.4893 159.883 20.0389 159.883 21.8114V23.2231H146.733C146.776 24.6559 147.273 25.8022 148.216 26.662C149.158 27.5217 150.312 27.9463 151.699 27.9463C153.086 27.9463 154.028 27.6491 154.685 27.0653C155.341 26.4815 155.849 25.8129 156.199 25.0593L159.364 26.6832C159.036 27.3413 158.56 28.0312 157.935 28.7423C157.31 29.464 156.495 30.069 155.468 30.5785C154.441 31.088 153.149 31.3321 151.582 31.3321V31.3427ZM146.755 20.3043H155.934C155.839 19.0837 155.394 18.1178 154.579 17.4173C153.774 16.7168 152.715 16.3559 151.434 16.3559C150.153 16.3559 149.063 16.7061 148.247 17.4173C147.443 18.1178 146.945 19.0837 146.755 20.3043Z" fill="#022D5B"/>
-            <path d="M169.835 31.3426C168.406 31.3426 167.083 30.9924 165.876 30.3025C164.669 29.6126 163.695 28.5936 162.953 27.2563C162.212 25.9189 161.842 24.3056 161.842 22.427V21.8963C161.842 20.0176 162.202 18.4043 162.932 17.067C163.663 15.7296 164.637 14.7001 165.854 13.9995C167.072 13.299 168.396 12.9382 169.825 12.9382C170.926 12.9382 171.858 13.0761 172.599 13.3415C173.351 13.6068 173.965 13.9571 174.441 14.3816C174.917 14.8062 175.277 15.2414 175.51 15.6872H176.103V6.1665H179.968V30.8438H176.167V28.4769H175.574C175.15 29.2092 174.505 29.8673 173.626 30.4511C172.747 31.0348 171.477 31.332 169.814 31.332L169.835 31.3426ZM170.958 27.9568C172.461 27.9568 173.7 27.4686 174.685 26.4921C175.669 25.5156 176.167 24.1252 176.167 22.3102V21.96C176.167 20.145 175.68 18.7652 174.706 17.7993C173.732 16.8335 172.482 16.3558 170.958 16.3558C169.433 16.3558 168.216 16.8335 167.231 17.7993C166.246 18.7652 165.749 20.145 165.749 21.96V22.3102C165.749 24.1252 166.246 25.5156 167.231 26.4921C168.216 27.4686 169.454 27.9568 170.958 27.9568Z" fill="#022D5B"/>
-         </g>
-    </svg></div>
-    <button class="logout-btn" onclick="logout()"><i class="fas fa-power-off"></i> Logout</button>
+    <div class="brand">
+        <svg width="150" height="30" viewBox="0 0 180 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g>
+                <path d="M0 15.2309V0.626219C0 0.275961 0.275278 0 0.624669 0H8.036C10.8841 0 13.1922 2.31383 13.1922 5.16896V15.2309C13.1922 15.5812 12.9169 15.8571 12.5675 15.8571H0.624669C0.275278 15.8571 0 15.5812 0 15.2309Z" fill="#B71530"/>
+                <path d="M0 21.7693V36.374C0 36.7242 0.275278 37.0002 0.624669 37.0002H8.036C10.8841 37.0002 13.1922 34.6864 13.1922 31.8312V21.7693C13.1922 21.419 12.9169 21.1431 12.5675 21.1431H0.624669C0.275278 21.1431 0 21.419 0 21.7693Z" fill="#B71530"/>
+                <path d="M31.7097 15.2309V0.626219C31.7097 0.275961 31.4345 0 31.0851 0H23.6737C20.8257 0 18.5176 2.31383 18.5176 5.16896V15.2309C18.5176 15.5812 18.7929 15.8571 19.1422 15.8571H31.0851C31.4345 15.8571 31.7097 15.5812 31.7097 15.2309Z" fill="#B71530"/>
+                <path d="M31.7097 21.7693V36.374C31.7097 36.7242 31.4345 37.0002 31.0851 37.0002H23.6737C20.8257 37.0002 18.5176 34.6864 18.5176 31.8312V21.7693Z" fill="#B71530"/>
+                <path d="M48.1734 30.8544H44.1289V6.1665H48.1734V16.6424H58.1575V6.1665H62.202V30.8438H58.1575V20.3042H48.1734V30.8438V30.8544Z" fill="#022D5B"/>
+                <path d="M67.8342 11.1762C67.1037 11.1762 66.4896 10.9427 65.992 10.4757C65.4838 10.0087 65.2402 9.38244 65.2402 8.60762C65.2402 7.83281 65.4943 7.20659 65.992 6.73958C66.5002 6.27257 67.1142 6.03906 67.8342 6.03906C68.5542 6.03906 69.2106 6.27257 69.6976 6.73958C70.1952 7.20659 70.4388 7.83281 70.4388 8.60762C70.4388 9.38244 70.1952 10.0087 69.6976 10.4757C69.2 10.9427 68.5859 11.1762 67.8342 11.1762ZM69.7717 30.8543H65.9073V13.4369H69.7717V30.8543Z" fill="#022D5B"/>
+                <path d="M77.469 30.8543H73.6045V13.437H77.4054V15.9737H77.9984C78.3054 15.2732 78.8665 14.6257 79.6818 14.0313C80.497 13.4476 81.7358 13.1504 83.3769 13.1504C84.7109 13.1504 85.8967 13.4476 86.9131 14.0526C87.9295 14.6469 88.7342 15.4961 89.3059 16.5787C89.8777 17.6613 90.1635 18.9456 90.1635 20.4209V30.8543H86.299V20.7393C86.299 19.2852 85.9391 18.2026 85.2297 17.4915C84.5097 16.791 83.5145 16.4301 82.2228 16.4301C80.7723 16.4301 79.6183 16.9183 78.7607 17.8948C77.9031 18.8713 77.4796 20.2511 77.4796 22.0342V30.8437L77.469 30.8543Z" fill="#022D5B"/>
+                <path d="M100.963 31.3426C99.534 31.3426 98.2106 30.9924 97.0036 30.3025C95.7966 29.6126 94.8226 28.5936 94.0814 27.2563C93.3403 25.9189 92.9697 24.3056 92.9697 22.427V21.8963C92.9697 20.0176 93.3297 18.4043 94.0602 17.067C94.7908 15.7296 95.7649 14.7001 96.9824 13.9995C98.2 13.299 99.5235 12.9382 100.953 12.9382C102.054 12.9382 102.986 13.0761 103.727 13.3415C104.478 13.6068 105.093 13.9571 105.569 14.3816C106.045 14.8062 106.405 15.2414 106.638 15.6872H107.242V6.1665H111.106V30.8438H107.305V28.4769H106.712C106.289 29.2092 105.643 29.8673 104.764 30.4511C103.886 31.0348 102.615 31.332 100.953 31.332L100.963 31.3426ZM102.096 27.9568C103.6 27.9568 104.838 27.4686 105.823 26.4921C106.808 25.5156 107.305 24.1252 107.305 22.3102V21.96C107.305 20.145 106.818 18.7652 105.844 17.7993C104.87 16.8335 103.621 16.3558 102.096 16.3558C100.572 16.3558 99.3541 16.8335 98.3694 17.7993C97.3848 18.7652 96.8871 20.145 96.8871 21.96V22.3102C96.8871 24.1252 97.3848 25.5156 98.3694 26.4921C99.3541 27.4686 100.593 27.9568 102.096 27.9568Z" fill="#022D5B"/>
+                <path d="M118.793 30.8543H114.929V13.437H118.73V15.443H119.323C119.63 14.8274 120.148 14.2967 120.868 13.8403C121.599 13.3839 122.573 13.1504 123.791 13.1504C125.008 13.1504 126.077 13.4051 126.85 13.9252C127.623 14.4453 128.206 15.1033 128.608 15.8994H129.201C129.603 15.1246 130.175 14.4665 130.927 13.9464C131.678 13.4157 132.748 13.1504 134.124 13.1504C135.225 13.1504 136.22 13.3839 137.099 13.8403C137.978 14.2967 138.677 14.9866 139.196 15.8994C139.714 16.8122 139.968 17.9479 139.968 19.2852V30.8543H136.104V19.6036C136.104 18.5741 135.829 17.778 135.278 17.2261C134.728 16.6742 133.944 16.3982 132.938 16.3982C131.858 16.3982 131.001 16.7485 130.355 17.4596C129.709 18.1601 129.391 19.1897 129.391 20.527V30.8543H125.527V19.6036C125.527 18.5741 125.252 17.778 124.701 17.2261C124.151 16.6742 123.378 16.3982 122.393 16.3982C121.292 16.3982 120.413 16.7485 119.778 17.4596C119.132 18.1601 118.814 19.1897 118.814 20.527V30.8543H118.793Z" fill="#022D5B"/>
+                <path d="M151.582 31.3427C149.846 31.3427 148.322 30.9712 146.987 30.2282C145.664 29.4853 144.626 28.4451 143.896 27.0865C143.155 25.7386 142.784 24.1571 142.784 22.3421V21.9176C142.784 20.1026 143.144 18.5317 143.875 17.1732C144.605 15.8252 145.622 14.7744 146.935 14.0315C148.247 13.2885 149.761 12.917 151.477 12.917C153.192 12.917 154.611 13.2885 155.87 14.0315C157.141 14.7744 158.126 15.8146 158.824 17.1519C159.523 18.4893 159.883 20.0389 159.883 21.8114V23.2231H146.733C146.776 24.6559 147.273 25.8022 148.216 26.662C149.158 27.5217 150.312 27.9463 151.699 27.9463C153.086 27.9463 154.028 27.6491 154.685 27.0653C155.341 26.4815 155.849 25.8129 156.199 25.0593L159.364 26.6832C159.036 27.3413 158.56 28.0312 157.935 28.7423C157.31 29.464 156.495 30.069 155.468 30.5785C154.441 31.088 153.149 31.3321 151.582 31.3321V31.3427ZM146.755 20.3043H155.934C155.839 19.0837 155.394 18.1178 154.579 17.4173C153.774 16.7168 152.715 16.3559 151.434 16.3559C150.153 16.3559 149.063 16.7061 148.247 17.4173C147.443 18.1178 146.945 19.0837 146.755 20.3043Z" fill="#022D5B"/>
+                <path d="M169.835 31.3426C168.406 31.3426 167.083 30.9924 165.876 30.3025C164.669 29.6126 163.695 28.5936 162.953 27.2563C162.212 25.9189 161.842 24.3056 161.842 22.427V21.8963C161.842 20.0176 162.202 18.4043 162.932 17.067C163.663 15.7296 164.637 14.7001 165.854 13.9995C167.072 13.299 168.396 12.9382 169.825 12.9382C170.926 12.9382 171.858 13.0761 172.599 13.3415C173.351 13.6068 173.965 13.9571 174.441 14.3816C174.917 14.8062 175.277 15.2414 175.51 15.6872H176.103V6.1665H179.968V30.8438H176.167V28.4769H175.574C175.15 29.2092 174.505 29.8673 173.626 30.4511C172.747 31.0348 171.477 31.332 169.814 31.332L169.835 31.3426ZM170.958 27.9568C172.461 27.9568 173.7 27.4686 174.685 26.4921C175.669 25.5156 176.167 24.1252 176.167 22.3102V21.96C176.167 20.145 175.68 18.7652 174.706 17.7993C173.732 16.8335 172.482 16.3558 170.958 16.3558C169.433 16.3558 168.216 16.8335 167.231 17.7993C166.246 18.7652 165.749 20.145 165.749 21.96V22.3102C165.749 24.1252 166.246 25.5156 167.231 26.4921C168.216 27.4686 169.454 27.9568 170.958 27.9568Z" fill="#022D5B"/>
+            </g>
+        </svg>
+    </div>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-power-off"></i> <span>Logout</span></button>
 </header>
 
 <div class="navbar">
-    <h1><i class="fas fa-chart-line"></i> Compliance Dashboard</h1>
-    <p>Real-time monitoring of medical staff policy acknowledgments</p>
+    <h1><i class="fas fa-chart-line"></i> Admin Dashboard</h1>
+    <p>Real-time monitoring of staff policies</p>
 </div>
 
 <div class="container">
     <div class="stats-grid">
         <div class="stat-card">
-            <p>TOTAL STAFF</p>
+            <p>Total Employees</p>
             <h2 id="totalCount">0</h2>
         </div>
         <div class="stat-card" style="border-top-color: var(--secondary);">
-            <p>AVG. COMPLIANCE</p>
+            <p>Overall Compliance</p>
             <h2 id="avgCompliance">0%</h2>
         </div>
         <div class="stat-card" style="border-top-color: var(--warning);">
-            <p>PENDING ACTIONS</p>
+            <p>Pending Actions</p>
             <h2 id="pendingCount">0</h2>
         </div>
     </div>
 
     <div class="card" id="formCard">
-        <h3 id="formTitle"><i class="fas fa-user-plus"></i> Register New Staff</h3>
+        <h3 id="formTitle"><i class="fas fa-user-plus"></i> Register Staff</h3>
         <div class="input-group">
             <input type="hidden" id="editEmpId">
-            <input type="text" id="empIdInput" placeholder="Staff ID (e.g. MED-101)">
+            <input type="text" id="empIdInput" placeholder="Employee ID (e.g. EMP-101)">
             <input type="text" id="nameInput" placeholder="Full Name">
             <input type="tel" id="phoneInput" placeholder="Phone Number">
-            <button id="createBtn" class="btn-main" onclick="createEmployee()">Add Staff</button>
+            <button id="createBtn" class="btn-main" onclick="createEmployee()">Add Employee</button>
             <button id="updateBtn" class="btn-main hidden" style="background: var(--secondary);" onclick="submitUpdate()">Save Changes</button>
             <button id="cancelBtn" style="background:#a0aec0;" class="btn-main hidden" onclick="resetForm()">Cancel</button>
         </div>
     </div>
 
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3><i class="fas fa-users"></i> Staff Records</h3>
-            <input type="text" id="searchInput" placeholder="Search name or ID..." onkeyup="filterEmployees()" style="max-width: 250px;">
+        <div class="table-header-flex">
+            <h3><i class="fas fa-users"></i> Employees Records</h3>
+            <input type="text" id="searchInput" placeholder="Search name or ID..." onkeyup="filterEmployees()" style="max-width: 300px;">
         </div>
         
         <div class="table-wrapper">
             <table id="employeeTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Policy Compliance Status</th>
+                        <th>Employee ID</th>
+                        <th>Name & Contact</th>
+                        <th>Policy Status</th>
                         <th style="text-align: right;">Action</th>
                     </tr>
                 </thead>
@@ -148,11 +178,11 @@
 </div>
 
 <script>
-// Background Animation
+// Background Animation logic remains the same
 function createIcons() {
     const bg = document.getElementById('bg');
     const icons = ['fa-heartbeat', 'fa-stethoscope', 'fa-pills', 'fa-user-md'];
-    for(let i=0; i<12; i++) {
+    for(let i=0; i<10; i++) {
         const icon = document.createElement('i');
         icon.className = `fas ${icons[Math.floor(Math.random()*icons.length)]} floating-icon`;
         icon.style.left = Math.random() * 100 + 'vw';
@@ -164,7 +194,6 @@ function createIcons() {
 createIcons();
 
 const API_BASE = "https://employee-policy-system.onrender.com/api/admin";
-const TOTAL_POLICIES = 9; // Based on your enum in User.js
 const token = localStorage.getItem("adminToken");
 let allEmployees = [];
 
@@ -181,70 +210,59 @@ function renderDashboard() {
     const tbody = document.getElementById("tableBody");
     tbody.innerHTML = "";
     
-    // This list should match your User.js model enum exactly
     const POLICY_MAP = {
-        "code_of_conduct": "Code of Conduct",
-        "remote_work": "Remote Work",
-        "data_privacy": "Data Privacy",
-        "travel_expense": "Travel Expense",
-        "anti_harassment": "Anti-Harassment",
-        "workplace_safety": "Safety",
-        "banding": "Banding",
-        "holidays": "Holidays",
-        "leaves": "Leaves"
+        "code_of_conduct": "Code", "remote_work": "Remote", "data_privacy": "Privacy",
+        "travel_expense": "Travel", "anti_harassment": "Ethics", "workplace_safety": "Safety",
+        "banding": "Banding", "holidays": "Holidays", "leaves": "Leaves"
     };
 
-    const TOTAL_POLICIES = Object.keys(POLICY_MAP).length; 
-    let totalSigned = 0;
+    const TOTAL_POLICIES_COUNT = Object.keys(POLICY_MAP).length; 
+    let totalSignedPct = 0;
 
     allEmployees.forEach(emp => {
         const signedPolicies = emp.policySubmissions || [];
         const count = signedPolicies.length;
-        const percentage = Math.round((count / TOTAL_POLICIES) * 100);
-        totalSigned += percentage;
+        const percentage = Math.round((count / TOTAL_POLICIES_COUNT) * 100);
+        totalSignedPct += percentage;
 
-        // Create the HTML for the policy name tags
         let policyTags = '';
         if (count > 0) {
             policyTags = '<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">';
             signedPolicies.forEach(p => {
                 const displayName = POLICY_MAP[p.policyKey] || p.policyKey;
-                policyTags += `<span style="background: #e6fffa; color: #234e52; font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid #b2f5ea;"><i class="fas fa-check" style="font-size: 8px;"></i> ${displayName}</span>`;
+                policyTags += `<span style="background: #e6fffa; color: #234e52; font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid #b2f5ea;">${displayName}</span>`;
             });
             policyTags += '</div>';
-        } else {
-            policyTags = '<div style="margin-top: 8px; font-size: 11px; color: #a0aec0; font-style: italic;">No policies signed yet</div>';
         }
 
         tbody.innerHTML += `
             <tr>
                 <td><span style="font-weight:600; color:var(--primary)">${emp.employeeId || 'N/A'}</span></td>
                 <td><strong>${emp.name}</strong><br><small style="color:#a0aec0">${emp.phone}</small></td>
-                <td style="min-width: 250px;">
+                <td>
                     <div style="display:flex; justify-content:space-between; align-items:center">
-                        <span class="percent-text">${percentage}% Complete</span>
-                        <span style="font-size:10px; color:#64748b; font-weight:600;">${count}/${TOTAL_POLICIES} SIGNED</span>
+                        <span class="percent-text">${percentage}%</span>
+                        <span style="font-size:10px; color:#64748b; font-weight:600;">${count}/${TOTAL_POLICIES_COUNT}</span>
                     </div>
                     <div class="progress-container">
                         <div class="progress-fill" style="width: ${percentage}%"></div>
                     </div>
                     ${policyTags}
                 </td>
-                <td style="text-align: right; vertical-align: top;">
-                    <button class="btn-main" style="padding: 6px 12px; font-size: 12px; background:#ebf8ff; color:var(--primary);" onclick="prepareUpdate('${emp._id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn-main" style="padding: 6px 12px; font-size: 12px; background:#fff5f5; color:var(--danger);" onclick="deleteEmployee('${emp._id}')"><i class="fas fa-trash"></i></button>
+                <td style="text-align: right;">
+                    <button class="btn-main" style="padding: 8px; min-width:35px; background:#ebf8ff; color:var(--primary);" onclick="prepareUpdate('${emp._id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-main" style="padding: 8px; min-width:35px; background:#fff5f5; color:var(--danger);" onclick="deleteEmployee('${emp._id}')"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `;
     });
 
-    // Update Top Stats
     document.getElementById("totalCount").innerText = allEmployees.length;
-    document.getElementById("avgCompliance").innerText = allEmployees.length ? Math.round(totalSigned / allEmployees.length) + "%" : "0%";
-    document.getElementById("pendingCount").innerText = allEmployees.filter(e => (e.policySubmissions?.length || 0) < TOTAL_POLICIES).length;
+    document.getElementById("avgCompliance").innerText = allEmployees.length ? Math.round(totalSignedPct / allEmployees.length) + "%" : "0%";
+    document.getElementById("pendingCount").innerText = allEmployees.filter(e => (e.policySubmissions?.length || 0) < TOTAL_POLICIES_COUNT).length;
 }
 
-// Prepare, Update, Create, Delete functions (Same as previous, just adding renderDashboard() call)
+// REST OF THE LOGIC (prepareUpdate, createEmployee, etc) stays the same
 function prepareUpdate(id) {
     const emp = allEmployees.find(e => e._id === id);
     document.getElementById("editEmpId").value = emp._id;
@@ -277,7 +295,7 @@ function resetForm() {
     document.getElementById("empIdInput").value = "";
     document.getElementById("nameInput").value = "";
     document.getElementById("phoneInput").value = "";
-    document.getElementById("formTitle").innerHTML = '<i class="fas fa-user-plus"></i> Register New Staff';
+    document.getElementById("formTitle").innerHTML = '<i class="fas fa-user-plus"></i> Register Staff';
     document.getElementById("createBtn").classList.remove("hidden");
     document.getElementById("updateBtn").classList.add("hidden");
     document.getElementById("cancelBtn").classList.add("hidden");
