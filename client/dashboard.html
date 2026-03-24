@@ -32,7 +32,7 @@
             min-height: 100vh;
         }
 
-        /* --- Header Section Fixes --- */
+        /* --- Header Section --- */
         .main-header {
             position: sticky;
             top: 0;
@@ -111,7 +111,6 @@
             z-index: 1100;
         }
 
-        /* --- UI Elements --- */
         .nav-list { list-style: none; }
         .nav-link {
             padding: 14px 18px;
@@ -136,7 +135,8 @@
             border-radius: 10px;
         }
         .submenu.open { max-height: 500px; }
-        .submenu li { padding: 12px 18px 12px 45px; color: rgba(255,255,255,0.6); cursor: pointer; }
+        .submenu li { padding: 12px 18px 12px 45px; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.9rem; }
+        .submenu li:hover { color: white; }
 
         #main-content { flex-grow: 1; padding: 40px; }
         .content-card {
@@ -148,6 +148,42 @@
             margin: 0 auto;
         }
 
+        /* --- NEW STYLES FOR BUTTONS AND CONTENT --- */
+        .policy-title { color: var(--primary); margin-bottom: 20px; font-size: 1.8rem; }
+        .policy-text-box { 
+            background: #f8fafc; 
+            padding: 25px; 
+            border-radius: 12px; 
+            border: 1px solid #e2e8f0; 
+            margin-bottom: 30px; 
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .btn-submit {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(183, 21, 48, 0.2);
+        }
+
+        .btn-submit:hover {
+            background: #961228;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(183, 21, 48, 0.3);
+        }
+
+        .btn-submit:active { transform: translateY(0); }
+        
         /* --- Floating Background Widgets --- */
         .bg-widgets { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; pointer-events: none; }
         .widget { position: absolute; background: linear-gradient(135deg, rgba(2, 45, 91, 0.03), rgba(183, 21, 48, 0.03)); border-radius: 50%; }
@@ -164,8 +200,8 @@
                 width: 280px;
             }
             #sidebar.active { left: 0; }
-            #main-content { padding: 20px 10px; }
-            .sidebar-close { display: block; position: absolute; right: 15px; top: 15px; color: white; background: none; border: none; font-size: 1.5rem; }
+            #main-content { padding: 20px 15px; }
+            .sidebar-close { display: block; position: absolute; right: 15px; top: 15px; color: white; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
         }
     </style>
 </head>
@@ -197,6 +233,7 @@
             </div>
         </div>
     </header>
+
     <div class="container-flex">
         <nav id="sidebar">
             <button class="sidebar-close" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
@@ -208,7 +245,7 @@
                     <div class="nav-link" onclick="toggleSubmenu()">
                         <i class="fas fa-shield-alt"></i> 
                         <span data-i18n="policies">Policies</span>
-                        <i class="fas fa-chevron-down arrow"></i>
+                        <i class="fas fa-chevron-down arrow" style="margin-left: auto;"></i>
                     </div>
                     <ul id="policy-submenu" class="submenu">
                         <li onclick="loadContent('code_of_conduct')"><a data-i18n="code_of_conduct">Code of Conduct</a></li>
@@ -238,7 +275,7 @@
                         <i class="fas fa-user-tie fa-3x" style="color: var(--primary);"></i>
                     </div>
                     <h1 data-i18n="welcome_header">Welcome to the Portal</h1>
-                    <p data-i18n="instruction" style="color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto;">Select a category from the sidebar to review and acknowledge our organization's policies.</p>
+                    <p data-i18n="instruction" style="color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto; margin-top: 15px;">Select a category from the sidebar to review and acknowledge our organization's policies.</p>
                 </div>
             </div>
             <div id="content-display" class="content-card" style="display: none;"></div>
@@ -246,7 +283,6 @@
     </div>
 
     <script>
-        // ... (Same JS Logic as your original file)
         const i18n = {
             en: {
                 home: "Dashboard", welcome: "Welcome", logout: "Logout", policies: "Policies", banding: "Banding", holidays: "Holidays", leaves: "Leaves",
@@ -255,15 +291,15 @@
                 code_of_conduct: "Code of Conduct", remote_work: "Remote Work Policy", data_privacy: "Data Privacy Policy",
                 travel_expense: "Travel and Expense Policy", anti_harassment: "Anti-Harassment Policy", workplace_safety: "Workplace Safety Policy",
                 ack_text: "I hereby acknowledge that I have received, read, and understand the ",
-                code_of_conduct_content: "Maintain integrity and professional standards in all business dealings...",
-                remote_work_content: "Guidelines for working outside the office...",
-                data_privacy_content: "Protocols for handling sensitive data...",
-                travel_expense_content: "Procedures for reimbursement...",
-                anti_harassment_content: "Zero tolerance policy for any form of harassment...",
-                workplace_safety_content: "Safety protocols and emergency procedures...",
-                banding_content: "Grades: Junior, Associate, Senior, Manager, Director.",
-                holidays_content: "Holidays: New Year, Republic Day, Independence Day, Diwali.",
-                leaves_content: "Leave types: Privilege, Sick, and Casual Leave allocations."
+                code_of_conduct_content: "Hindmed expects employees to maintain the highest levels of integrity and professional standards. All business dealings should be transparent and ethical.",
+                remote_work_content: "Employees are eligible for remote work based on role requirements. Ensure a secure internet connection and maintain work hours as per team standards.",
+                data_privacy_content: "All employee and client data must be handled with strict confidentiality. Unauthorized sharing of internal data is strictly prohibited.",
+                travel_expense_content: "Business-related travel expenses must be pre-approved. Reimbursements require valid receipts submitted within 30 days.",
+                anti_harassment_content: "Hindmed is committed to a safe workplace. We have zero tolerance for any form of verbal, physical, or digital harassment.",
+                workplace_safety_content: "Follow all fire safety and emergency protocols. Report any workplace hazards to the HR or Facilities team immediately.",
+                banding_content: "Hindmed follows a structured banding system: L1 (Junior), L2 (Associate), L3 (Senior), L4 (Manager), and L5 (Director).",
+                holidays_content: "The company observes all major national holidays including Republic Day, Independence Day, Gandhi Jayanti, and Diwali.",
+                leaves_content: "Employees are entitled to 12 Sick Leaves, 12 Casual Leaves, and 15 Privilege Leaves per calendar year."
             },
             kn: {
                 home: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್", welcome: "ಸ್ವಾಗತ", logout: "ನಿರ್ಗಮಿಸಿ", policies: "ನೀತಿಗಳು", banding: "ಬ್ಯಾಂಡಿಂಗ್", holidays: "ರಜಾದಿನಗಳು", leaves: "ರಜೆಗಳು",
@@ -296,7 +332,9 @@
 
         function toggleSubmenu() {
             const submenu = document.getElementById('policy-submenu');
+            const arrow = document.querySelector('.arrow');
             submenu.classList.toggle('open');
+            arrow.style.transform = submenu.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
         function loadContent(key) {
@@ -313,18 +351,33 @@
                 <h2 class="policy-title">${title}</h2>
                 <div class="policy-text-box">${content}</div>
                 ${isSigned ? 
-                    `<div style="color:var(--success); background:#e6fffa; padding:20px; border-radius:12px; display:flex; align-items:center; gap:10px;">
-                        <i class="fas fa-check-circle fa-lg"></i> <b>Acknowledged</b>
+                    `<div style="color:var(--success); background:#e6fffa; padding:20px; border-radius:12px; display:flex; align-items:center; gap:10px; border: 1px solid var(--success);">
+                        <i class="fas fa-check-circle fa-lg"></i> <b>${i18n[currentLang].success_msg || 'Already Acknowledged'}</b>
                     </div>` : 
                     `<div class="submission-controls">
-                        <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; cursor:pointer;">
-                            <input type="checkbox" id="agree-check" style="width:18px; height:18px;"> ${i18n[currentLang].agree}
+                        <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor:pointer; font-weight: 500;">
+                            <input type="checkbox" id="agree-check" style="width:20px; height:20px; accent-color: var(--secondary);"> ${i18n[currentLang].agree}
                         </label>
-                        <button class="btn-submit" onclick="handlePolicySubmit('${key}')">${i18n[currentLang].submit}</button>
+                        <button class="btn-submit" onclick="handlePolicySubmit('${key}')">
+                            <i class="fas fa-paper-plane"></i> ${i18n[currentLang].submit}
+                        </button>
                     </div>`
                 }
             `;
             if(window.innerWidth <= 768) closeSidebar();
+        }
+
+        async function handlePolicySubmit(key) {
+            const isChecked = document.getElementById('agree-check').checked;
+            if(!isChecked) {
+                alert("Please agree to the terms first.");
+                return;
+            }
+
+            // Implementation of submission logic
+            alert(i18n[currentLang].success_msg);
+            signedPolicies.push(key);
+            loadContent(key);
         }
 
         async function fetchUserStatus() {
@@ -352,6 +405,13 @@
             currentLang = currentLang === 'en' ? 'kn' : 'en';
             localStorage.setItem('lang', currentLang);
             applyLanguage();
+            // Refresh content if viewing a policy
+            const display = document.getElementById('content-display');
+            if(display.style.display === 'block') {
+                const title = display.querySelector('h2').innerText;
+                // Simplified refresh logic
+                goHome();
+            }
         }
 
         function applyLanguage() {
