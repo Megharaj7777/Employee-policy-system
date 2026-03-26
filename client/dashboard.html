@@ -36,7 +36,7 @@
         .main-header {
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: 1200;
             background: var(--white);
             box-shadow: 0 2px 15px rgba(0,0,0,0.04);
         }
@@ -98,20 +98,34 @@
         .logout-btn:hover { background: var(--secondary); color: white; }
 
         /* --- Sidebar & Layout --- */
-        .container-flex { display: flex; }
+        .container-flex { display: flex; position: relative; }
 
         #sidebar {
             width: var(--sidebar-width);
             background: var(--primary);
             height: calc(100vh - (var(--logo-height) + var(--action-bar-height)));
-            position: sticky;
+            position: fixed; /* Changed to fixed for consistent toggle */
+            left: -280px; /* Start hidden for both desktop and mobile */
             top: calc(var(--logo-height) + var(--action-bar-height));
             transition: var(--transition);
             padding: 25px 15px;
             z-index: 1100;
         }
 
-        .nav-list { list-style: none; }
+        #sidebar.active { left: 0; }
+
+        .sidebar-close { 
+            position: absolute; 
+            right: 15px; 
+            top: 15px; 
+            color: white; 
+            background: none; 
+            border: none; 
+            font-size: 1.5rem; 
+            cursor: pointer; 
+        }
+
+        .nav-list { list-style: none; margin-top: 20px; }
         .nav-link {
             padding: 14px 18px;
             display: flex;
@@ -138,7 +152,14 @@
         .submenu li { padding: 12px 18px 12px 45px; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.9rem; }
         .submenu li:hover { color: white; }
 
-        #main-content { flex-grow: 1; padding: 40px; }
+        #main-content { 
+            flex-grow: 1; 
+            padding: 40px; 
+            transition: var(--transition); 
+            width: 100%;
+        }
+
+        /* --- Policy Content --- */
         .content-card {
             background: white;
             padding: 40px;
@@ -148,7 +169,6 @@
             margin: 0 auto;
         }
 
-        /* --- NEW STYLES FOR BUTTONS AND CONTENT --- */
         .policy-title { color: var(--primary); margin-bottom: 20px; font-size: 1.8rem; }
         .policy-text-box { 
             background: #f8fafc; 
@@ -173,17 +193,8 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 4px 12px rgba(183, 21, 48, 0.2);
         }
 
-        .btn-submit:hover {
-            background: #961228;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(183, 21, 48, 0.3);
-        }
-
-        .btn-submit:active { transform: translateY(0); }
-        
         /* --- Floating Background Widgets --- */
         .bg-widgets { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; pointer-events: none; }
         .widget { position: absolute; background: linear-gradient(135deg, rgba(2, 45, 91, 0.03), rgba(183, 21, 48, 0.03)); border-radius: 50%; }
@@ -193,15 +204,10 @@
             .topbar-center { font-size: 0.8rem; }
             .lang-btn span { display: none; }
             #sidebar {
-                position: fixed;
-                left: -100%;
                 top: 0;
                 height: 100vh;
-                width: 280px;
             }
-            #sidebar.active { left: 0; }
             #main-content { padding: 20px 15px; }
-            .sidebar-close { display: block; position: absolute; right: 15px; top: 15px; color: white; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
         }
     </style>
 </head>
@@ -318,14 +324,16 @@
             const menuBtn = document.getElementById('menu-toggle');
             const sidebar = document.getElementById('sidebar');
 
+            // Opens the menu on Desktop and Mobile
             menuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
+                sidebar.classList.add('active');
             });
 
             applyLanguage();
             fetchUserStatus();
         });
 
+        // This works for the Close Button on Desktop and Mobile
         function closeSidebar() {
             document.getElementById('sidebar').classList.remove('active');
         }
@@ -364,6 +372,7 @@
                     </div>`
                 }
             `;
+            // Auto-close after selection only on mobile
             if(window.innerWidth <= 768) closeSidebar();
         }
 
@@ -373,8 +382,6 @@
                 alert("Please agree to the terms first.");
                 return;
             }
-
-            // Implementation of submission logic
             alert(i18n[currentLang].success_msg);
             signedPolicies.push(key);
             loadContent(key);
@@ -405,13 +412,7 @@
             currentLang = currentLang === 'en' ? 'kn' : 'en';
             localStorage.setItem('lang', currentLang);
             applyLanguage();
-            // Refresh content if viewing a policy
-            const display = document.getElementById('content-display');
-            if(display.style.display === 'block') {
-                const title = display.querySelector('h2').innerText;
-                // Simplified refresh logic
-                goHome();
-            }
+            goHome();
         }
 
         function applyLanguage() {
